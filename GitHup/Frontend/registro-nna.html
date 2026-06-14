@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Nuevo Expediente — No Me Olvides</title>
+  
+  <link rel="icon" href="data:,">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css"> 
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar"><span class="topbar-title">NNA</span><span class="topbar-breadcrumb">/ Nuevo Expediente</span></div>
+    <div class="page-body">
+      <div class="page-header">
+        <div><div class="page-title">Nuevo Expediente NNA</div><div class="page-sub">Basado en el Formato Único de Declaración (FUD)</div></div>
+        <button class="btn btn-ghost" onclick="history.back()">← Volver</button>
+      </div>
+      <div id="alert"></div>
+      <div class="card">
+
+        <!-- SECCIÓN I: Datos básicos -->
+        <div class="form-section">
+          <div class="form-section-title">I. Datos de la Víctima</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Nombre(s) *</label><input id="nombre" type="text"/></div>
+            <div class="form-group"><label>Primer Apellido *</label><input id="p_apellido" type="text"/></div>
+            <div class="form-group"><label>Segundo Apellido</label><input id="s_apellido" type="text"/></div>
+            <div class="form-group"><label>Fecha de Nacimiento</label><input id="fecha_nac" type="date"/></div>
+            <div class="form-group"><label>Sexo</label>
+              <select id="sexo"><option value="">Seleccionar</option><option>Hombre</option><option>Mujer</option><option>Otro</option></select>
+            </div>
+            <div class="form-group"><label>Nacionalidad</label><input id="nacionalidad" type="text" value="Mexicana"/></div>
+            <div class="form-group"><label>CURP</label><input id="curp" type="text" maxlength="18"/></div>
+            <div class="form-group"><label>Estado Civil</label>
+              <select id="estado_civil"><option value="">Seleccionar</option><option>Soltero/a</option><option>Casado/a</option><option>Divorciado/a</option><option>Viudo/a</option><option>Unión libre</option></select>
+            </div>
+            <div class="form-group"><label>País de Nacimiento</label><input id="nac_pais" type="text" value="México"/></div>
+            <div class="form-group"><label>Entidad Federativa</label><input id="nac_entidad" type="text"/></div>
+            <div class="form-group"><label>Municipio</label><input id="nac_municipio" type="text"/></div>
+            <div class="form-group"><label>Comunidad</label><input id="nac_comunidad" type="text"/></div>
+          </div>
+        </div>
+
+        <!-- Domicilio -->
+        <div class="form-section">
+          <div class="form-section-title">Domicilio</div>
+          <div class="form-grid">
+            <div class="form-group form-full"><label>Calle</label><input id="calle" type="text"/></div>
+            <div class="form-group"><label>Número Exterior</label><input id="num_ext" type="text"/></div>
+            <div class="form-group"><label>Número Interior</label><input id="num_int" type="text"/></div>
+            <div class="form-group"><label>Colonia</label><input id="colonia" type="text"/></div>
+            <div class="form-group"><label>Código Postal</label><input id="cp" type="text"/></div>
+            <div class="form-group"><label>Localidad</label><input id="localidad" type="text"/></div>
+            <div class="form-group"><label>Delegación / Municipio</label><input id="municipio" type="text"/></div>
+            <div class="form-group"><label>Entidad Federativa</label><input id="entidad" type="text"/></div>
+            <div class="form-group"><label>Teléfono</label><input id="telefono" type="text"/></div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN II: Tipo de víctima -->
+        <div class="form-section">
+          <div class="form-section-title">II. Tipo de Víctima</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Tipo</label>
+              <select id="tipo_victima" onchange="toggleVictima()">
+                <option value="">Seleccionar</option>
+                <option value="directa">Directa</option>
+                <option value="indirecta">Indirecta</option>
+                <option value="ofendido">Ofendido</option>
+              </select>
+            </div>
+            <div class="form-group" id="victima-directa-wrap" style="display:none;">
+              <label>Nombre de la Víctima Directa</label><input id="nombre_victima_directa" type="text"/>
+            </div>
+            <div class="form-group" id="relacion-wrap" style="display:none;">
+              <label>Relación con la víctima</label><input id="relacion_victima" type="text" placeholder="Ej: hijo/a, hermano/a"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN: Relato de hechos -->
+        <div class="form-section">
+          <div class="form-section-title">V. Lugar y Relato de los Hechos</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Calle</label><input id="h_calle" type="text"/></div>
+            <div class="form-group"><label>Colonia</label><input id="h_colonia" type="text"/></div>
+            <div class="form-group"><label>Municipio</label><input id="h_municipio" type="text"/></div>
+            <div class="form-group"><label>Entidad</label><input id="h_entidad" type="text"/></div>
+            <div class="form-group"><label>Fecha de los Hechos</label><input id="fecha_hechos" type="date"/></div>
+            <div class="form-group form-full"><label>Relato de los Hechos</label><textarea id="relato" rows="4" placeholder="Describa las circunstancias antes, durante y después de los hechos..."></textarea></div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN VI: Tipo de daño -->
+        <div class="form-section">
+          <div class="form-section-title">VI. Tipo de Daño Sufrido</div>
+          <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
+            <label class="checkbox-group"><input type="checkbox" id="dano_fisico"/> Físico</label>
+            <label class="checkbox-group"><input type="checkbox" id="dano_psicologico"/> Psicológico</label>
+            <label class="checkbox-group"><input type="checkbox" id="dano_patrimonial"/> Patrimonial</label>
+            <label class="checkbox-group"><input type="checkbox" id="dano_sexual"/> Sexual</label>
+          </div>
+        </div>
+
+        <!-- SECCIÓN: Investigación -->
+        <div class="form-section">
+          <div class="form-section-title">VII. Investigación Ministerial</div>
+          <div class="form-grid">
+            <div class="form-group"><label>¿Denunció ante el MP?</label>
+              <select id="denuncio_mp"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>Fecha de Denuncia</label><input id="fecha_denuncia" type="date"/></div>
+            <div class="form-group"><label>Competencia</label>
+              <select id="competencia_mp"><option value="">Seleccionar</option><option value="federal">Federal</option><option value="local">Local</option></select>
+            </div>
+            <div class="form-group"><label>Entidad</label><input id="entidad_mp" type="text"/></div>
+            <div class="form-group"><label>Delito</label><input id="delito_mp" type="text"/></div>
+            <div class="form-group"><label>Agencia MP</label><input id="agencia_mp" type="text"/></div>
+            <div class="form-group"><label>No. Averiguación</label><input id="num_averiguacion" type="text"/></div>
+            <div class="form-group"><label>Estado Investigación</label><input id="estado_investigacion" type="text"/></div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN VIII: Vulnerabilidad -->
+        <div class="form-section">
+          <div class="form-section-title">VIII. Información Complementaria de la Víctima</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Nombre del Tutor/a</label><input id="nombre_tutor" type="text"/></div>
+            <div class="form-group"><label>Contacto del Tutor/a</label><input id="contacto_tutor" type="text"/></div>
+            <div class="form-group"><label>Tipo de Violencia</label>
+              <select id="tipo_violencia">
+                <option value="">Seleccionar</option>
+                <option value="psicologica">Psicológica</option>
+                <option value="fisica">Física</option>
+                <option value="economica">Económica</option>
+                <option value="sexual">Sexual</option>
+                <option value="feminicida">Feminicida</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-group"><label>¿Tiene Discapacidad?</label>
+              <select id="tiene_discapacidad"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>Tipo de Discapacidad</label>
+              <select id="tipo_discapacidad"><option value="">N/A</option><option value="Física">Física</option><option value="Mental">Mental</option><option value="Intelectual">Intelectual</option><option value="Visual">Visual</option><option value="Auditiva">Auditiva</option><option value="Múltiple">Múltiple</option></select>
+            </div>
+            <div class="form-group"><label>¿Habla Español?</label>
+              <select id="habla_espanol"><option value="true">Sí</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>¿Requiere Traductor?</label>
+              <select id="requiere_traductor"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>Idioma / Lengua</label><input id="idioma_lengua" type="text"/></div>
+            <div class="form-group"><label>¿Pertenece a Comunidad Indígena?</label>
+              <select id="pertenece_indigena"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>Comunidad Indígena</label><input id="comunidad_indigena" type="text"/></div>
+          </div>
+        </div>
+
+        <!-- Solicitante -->
+        <div class="form-section">
+          <div class="form-section-title">I. Datos del Solicitante</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Tipo de Solicitante</label>
+              <select id="tipo_solicitante"><option value="">Seleccionar</option><option value="victima">Víctima</option><option value="familiar">Familiar</option><option value="servidor_publico">Servidor Público</option><option value="representante">Representante Legal</option></select>
+            </div>
+            <div class="form-group"><label>Nombre del Solicitante</label><input id="nombre_solicitante" type="text"/></div>
+            <div class="form-group"><label>Parentesco / Relación</label><input id="parentesco_solicitante" type="text"/></div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:1rem;">
+          <button class="btn btn-ghost" onclick="history.back()">Cancelar</button>
+          <button class="btn btn-primary" onclick="registrar()">Crear Expediente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="auth.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebar').innerHTML = renderSidebar('nna');
+
+  function toggleVictima() {
+    const tipo = document.getElementById('tipo_victima').value;
+    document.getElementById('victima-directa-wrap').style.display = tipo === 'indirecta' || tipo === 'ofendido' ? 'block' : 'none';
+    document.getElementById('relacion-wrap').style.display = tipo === 'indirecta' || tipo === 'ofendido' ? 'block' : 'none';
+  }
+
+  function g(id) { return document.getElementById(id)?.value || null; }
+  function gb(id) { return document.getElementById(id)?.checked || false; }
+
+  async function registrar() {
+    const body = {
+      nombre: g('nombre'), primer_apellido: g('p_apellido'), segundo_apellido: g('s_apellido'),
+      fecha_nacimiento: g('fecha_nac'), sexo: g('sexo'), nacionalidad: g('nacionalidad'),
+      curp: g('curp'), estado_civil: g('estado_civil'),
+      lugar_nac_pais: g('nac_pais'), lugar_nac_entidad: g('nac_entidad'),
+      lugar_nac_municipio: g('nac_municipio'), lugar_nac_comunidad: g('nac_comunidad'),
+      calle: g('calle'), numero_exterior: g('num_ext'), numero_interior: g('num_int'),
+      colonia: g('colonia'), codigo_postal: g('cp'), localidad: g('localidad'),
+      delegacion_municipio: g('municipio'), entidad_federativa: g('entidad'), telefono: g('telefono'),
+      tipo_victima: g('tipo_victima'), nombre_victima_directa: g('nombre_victima_directa'), relacion_victima: g('relacion_victima'),
+      lugar_hechos_calle: g('h_calle'), lugar_hechos_colonia: g('h_colonia'),
+      lugar_hechos_municipio: g('h_municipio'), lugar_hechos_entidad: g('h_entidad'),
+      fecha_hechos: g('fecha_hechos'), relato_hechos: g('relato'),
+      dano_fisico: gb('dano_fisico'), dano_psicologico: gb('dano_psicologico'),
+      dano_patrimonial: gb('dano_patrimonial'), dano_sexual: gb('dano_sexual'),
+      denuncio_mp: g('denuncio_mp') === 'true', fecha_denuncia_mp: g('fecha_denuncia'),
+      competencia_mp: g('competencia_mp'), entidad_mp: g('entidad_mp'),
+      delito_mp: g('delito_mp'), agencia_mp: g('agencia_mp'),
+      numero_averiguacion: g('num_averiguacion'), estado_investigacion: g('estado_investigacion'),
+      nombre_tutor: g('nombre_tutor'), contacto_tutor: g('contacto_tutor'),
+      tipo_violencia: g('tipo_violencia'),
+      tiene_discapacidad: g('tiene_discapacidad') === 'true',
+      tipo_discapacidad: g('tipo_discapacidad'),
+      habla_espanol: g('habla_espanol') === 'true',
+      requiere_traductor: g('requiere_traductor') === 'true',
+      idioma_lengua: g('idioma_lengua'),
+      pertenece_indigena: g('pertenece_indigena') === 'true',
+      comunidad_indigena: g('comunidad_indigena'),
+      tipo_solicitante: g('tipo_solicitante'),
+      nombre_solicitante: g('nombre_solicitante'),
+      parentesco_solicitante: g('parentesco_solicitante'),
+    };
+
+    if (!body.nombre || !body.primer_apellido) {
+      showAlert('El nombre y primer apellido son obligatorios', 'error'); return;
+    }
+
+    const res = await fetch(`${API}/api/nna`, { method:'POST', headers: authHeaders(), body: JSON.stringify(body) });
+    const data = await res.json();
+    if (res.ok) { showAlert('Expediente creado exitosamente', 'success'); setTimeout(()=>location.href='lista-nna.html', 1500); }
+    else { showAlert(data.detail||'Error al crear expediente', 'error'); }
+  }
+
+  function showAlert(msg, tipo) {
+    const el = document.getElementById('alert');
+    el.innerHTML = `<div class="alert alert-${tipo==='error'?'error':'success'}" style="margin-bottom:1rem;">${msg}</div>`;
+    el.scrollIntoView({ behavior:'smooth' });
+  }
+</script>
+</body>
+</html>

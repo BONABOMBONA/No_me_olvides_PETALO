@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Expedientes NNA — No Me Olvides</title>
+  
+  <link rel="icon" href="data:,">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar"><span class="topbar-title">Expedientes NNA</span></div>
+    <div class="page-body">
+      <div class="page-header">
+        <div><div class="page-title">Beneficiarios NNA</div><div class="page-sub">Niñas, Niños y Adolescentes registrados</div></div>
+        <button class="btn btn-primary" onclick="location.href='registro-nna.html'">+ Nuevo Expediente</button>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="cambiarTab('todos',this)">Todos</div>
+        <div class="tab" onclick="cambiarTab('sin_proceso',this)">Sin Proceso</div>
+        <div class="tab" onclick="cambiarTab('en_proceso',this)">En Proceso</div>
+        <div class="tab" onclick="cambiarTab('concluido',this)">Concluidos</div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="table-title">Lista de expedientes</span>
+          <span class="table-count" id="count">0</span>
+          <div class="search-bar"><input type="text" id="search" placeholder="Buscar por nombre o CURP..." oninput="filtrar()"/></div>
+        </div>
+        <table>
+          <thead><tr><th>Nombre</th><th>CURP</th><th>Tipo Víctima</th><th>Tipo Violencia</th><th>Estatus</th><th>Fecha Ingreso</th><th>Acciones</th></tr></thead>
+          <tbody id="tabla"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="auth.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebar').innerHTML = renderSidebar('nna');
+  let todos = [], tabActual = 'todos';
+  const bEstado = { sin_proceso:'badge-sin', en_proceso:'badge-proceso', concluido:'badge-concluido' };
+  const lEstado = { sin_proceso:'Sin proceso', en_proceso:'En proceso', concluido:'Concluido' };
+
+  async function cargar() {
+    todos = await fetch(`${API}/api/nna`, { headers: authHeaders() }).then(r=>r.json()).catch(()=>[]);
+    renderTabla();
+  }
+
+  function cambiarTab(tab, el) {
+    tabActual = tab;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    renderTabla();
+  }
+
+  function filtrar() { renderTabla(); }
+
+  function renderTabla() {
+    const q = document.getElementById('search').value.toLowerCase();
+    let data = Array.isArray(todos) ? todos : [];
+    if (tabActual !== 'todos') data = data.filter(n => n.estatus === tabActual);
+    if (q) data = data.filter(n => `${n.nombre} ${n.primer_apellido} ${n.curp||''}`.toLowerCase().includes(q));
+    document.getElementById('count').textContent = data.length;
+    document.getElementById('tabla').innerHTML = data.length === 0
+      ? `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No hay expedientes</div></div></td></tr>`
+      : data.map(n=>`
+        <tr>
+          <td class="name">${n.nombre} ${n.primer_apellido||''}</td>
+          <td>${n.curp||'—'}</td>
+          <td>${n.tipo_victima||'—'}</td>
+          <td>${n.tipo_violencia||'—'}</td>
+          <td><span class="badge ${bEstado[n.estatus]||''}">${lEstado[n.estatus]||n.estatus}</span></td>
+          <td>${n.fecha_ingreso ? new Date(n.fecha_ingreso).toLocaleDateString('es-MX') : '—'}</td>
+          <td style="display:flex;gap:.5rem;">
+            <button class="btn btn-secondary btn-sm" onclick="location.href='ver-nna.html?id=${n.id}'">Ver</button>
+            <button class="btn btn-ghost btn-sm" onclick="location.href='editar-nna.html?id=${n.id}'">Editar</button>
+          </td>
+        </tr>`).join('');
+  }
+  cargar();
+</script>
+</body>
+</html>

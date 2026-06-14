@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Ver Expediente — No Me Olvides</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="btn btn-ghost btn-sm" onclick="history.back()">← Volver</button>
+        <span class="topbar-title">Expedientes / Detalle NNA</span>
+      </div>
+    </div>
+    <div class="page-body">
+      <div id="contenido-nna">
+        <div style="text-align:center; padding: 3rem; color:var(--text-3);">Cargando expediente y cruzando catálogos institucionales...</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="auth.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebar').innerHTML = renderSidebar('nna');
+  
+  async function cargar() {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if(!id) { document.getElementById('contenido-nna').innerHTML = 'ID de expediente no válido.'; return; }
+
+    try {
+      // Descargamos el NNA y los 3 catálogos al mismo tiempo para traducir los IDs
+      const [resNna, resPar, resEnf, resLen] = await Promise.all([
+        fetch(`${API}/api/nna/${id}`, { headers: authHeaders() }),
+        fetch(`${API}/api/parentescos`, { headers: authHeaders() }),
+        fetch(`${API}/api/enfermedades`, { headers: authHeaders() }),
+        fetch(`${API}/api/lenguas`, { headers: authHeaders() })
+      ]);
+
+      if(!resNna.ok) { document.getElementById('contenido-nna').innerHTML = 'Expediente no encontrado'; return; }
+      
+      const n = await resNna.json();
+      const parentescos = resPar.ok ? await resPar.json() : [];
+      const enfermedades = resEnf.ok ? await resEnf.json() : [];
+      const lenguas = resLen.ok ? await resLen.json() : [];
+
+      // Funciones traductoras de ID a Nombre
+      const getPar = (id_par) => parentescos.find(p => p.id === id_par)?.nombre || 'No especificado';
+      const getEnf = (ids) => ids && ids.length > 0 
+        ? ids.map(i => `<span class="badge badge-sin" style="margin-right:4px;">${enfermedades.find(e => e.id === i)?.nombre || i}</span>`).join('') 
+        : 'Ninguna registrada';
+      const getLen = (ids) => ids && ids.length > 0 
+        ? ids.map(i => `<span class="badge badge-proceso" style="margin-right:4px;">${lenguas.find(l => l.id === i)?.nombre || i}</span>`).join('') 
+        : 'Ninguna (Español)';
+
+      document.getElementById('contenido-nna').innerHTML = `
+        <div class="page-header">
+          <div>
+            <div class="page-title">${n.nombre} ${n.primer_apellido} ${n.segundo_apellido || ''}</div>
+            <div class="page-sub">CURP: ${n.curp || 'No registrada'} | Edad: ${n.edad || 'N/A'} años</div>
+          </div>
+          <button class="btn btn-primary" onclick="location.href='editar-nna.html?id=${n.id}'">✏️ Editar Expediente</button>
+        </div>
+        
+        <div class="card" style="padding:2rem;">
+          
+          <h3 style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:0.5rem;">I. Datos Personales y Domicilio</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem;">
+            <p><strong>Nacionalidad:</strong> ${n.nacionalidad || 'Mexicana'}</p>
+            <p><strong>Código Postal:</strong> ${n.codigo_postal || '—'}</p>
+            <p><strong>Teléfono:</strong> ${n.telefono || '—'}</p>
+            <p><strong>Lugar de Nac.:</strong> ${n.lugar_nac_entidad || '—'}, ${n.lugar_nac_municipio || '—'}</p>
+          </div>
+
+          <h3 style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:0.5rem;">II. Red de Apoyo (Tutor)</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem;">
+            <p><strong>Tutor/a:</strong> ${n.nombre_tutor || 'No registrado'}</p>
+            <p><strong>Parentesco:</strong> ${getPar(n.id_parentesco)}</p>
+            <p><strong>Teléfono:</strong> ${n.telefono_tutor || '—'}</p>
+            <p><strong>Correo:</strong> ${n.correo_tutor || '—'}</p>
+            <div style="grid-column: 1 / -1;">
+              <p style="margin-bottom:0.5rem;"><strong>Enfermedades del Tutor (CIE-11):</strong></p>
+              <div>${getEnf(n.ids_enfermedades_tutor)}</div>
+            </div>
+          </div>
+
+          <h3 style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:0.5rem;">III. Vulnerabilidad y Salud del NNA</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem;">
+            <div style="grid-column: 1 / -1;">
+              <p style="margin-bottom:0.5rem;"><strong>Enfermedades del NNA (CIE-11):</strong></p>
+              <div>${getEnf(n.ids_enfermedades)}</div>
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <p style="margin-bottom:0.5rem;"><strong>Lenguas Indígenas (INALI):</strong></p>
+              <div>${getLen(n.ids_variantes_lengua)}</div>
+            </div>
+            <p><strong>¿Requiere Traductor?</strong> ${n.requiere_traductor ? 'Sí' : 'No'}</p>
+            <p><strong>Discapacidad:</strong> ${n.tiene_discapacidad ? (n.tipo_discapacidad + ' (' + n.grado_dependencia + ')') : 'No'}</p>
+          </div>
+
+          <h3 style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:0.5rem;">IV. Hechos y Situación Legal</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <p><strong>Tipo de Violencia:</strong> ${n.tipo_violencia || 'No especificado'}</p>
+            <p><strong>¿Denunció en MP?</strong> ${n.denuncio_mp ? 'Sí (' + (n.delito_mp||'Sin especificar') + ')' : 'No'}</p>
+            <div style="grid-column: 1 / -1;">
+              <p><strong>Relato de los hechos:</strong></p>
+              <p style="background:var(--bg-deep); padding:1rem; border-radius:8px; margin-top:0.5rem; white-space:pre-wrap;">${n.relato_hechos || 'Sin relato registrado.'}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      console.error(error);
+      document.getElementById('contenido-nna').innerHTML = '<div class="alert alert-error">Error de conexión al cargar el expediente.</div>';
+    }
+  }
+
+  window.onload = cargar;
+</script>
+</body>
+</html>

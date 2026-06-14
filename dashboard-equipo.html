@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Mi Panel — No Me Olvides</title>
+  
+  <link rel="icon" href="data:,">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar"><span class="topbar-title">Mi Panel</span></div>
+    <div class="page-body">
+      <div class="page-header">
+        <div><div class="page-title">Bienvenido</div><div class="page-sub">Panel del equipo multidisciplinario</div></div>
+        <button class="btn btn-primary" onclick="location.href='registro-nna.html'">+ Nuevo Expediente</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-title">Total Expedientes</div><div class="stat-value" id="t-nna">—</div></div>
+        <div class="stat-card"><div class="stat-title">Sin Proceso</div><div class="stat-value" id="t-sin">—</div></div>
+        <div class="stat-card"><div class="stat-title">En Proceso</div><div class="stat-value" id="t-pro">—</div></div>
+        <div class="stat-card"><div class="stat-title">Concluidos</div><div class="stat-value" id="t-con">—</div></div>
+      </div>
+      <div class="table-wrap" style="margin-top:2rem;">
+        <div class="table-header"><span class="table-title">Expedientes Recientes</span></div>
+        <table>
+          <thead><tr><th>Nombre</th><th>CURP</th><th>Tipo Violencia</th><th>Estatus</th><th>Acciones</th></tr></thead>
+          <tbody id="tabla-recientes"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="auth.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebar').innerHTML = renderSidebar('dashboard');
+  
+  const bEstado = { sin_proceso:'badge-sin', en_proceso:'badge-proceso', concluido:'badge-concluido' };
+  const lEstado = { sin_proceso:'Sin proceso', en_proceso:'En proceso', concluido:'Concluido' };
+
+  async function cargar() {
+    let nna = await fetch(`${API}/api/nna`, { headers: authHeaders() }).then(r=>r.json()).catch(()=>[]);
+    if(!Array.isArray(nna)) nna = [];
+    document.getElementById('t-nna').textContent = nna.length;
+    document.getElementById('t-sin').textContent = nna.filter(n=>n.estatus==='sin_proceso').length;
+    document.getElementById('t-pro').textContent = nna.filter(n=>n.estatus==='en_proceso').length;
+    document.getElementById('t-con').textContent = nna.filter(n=>n.estatus==='concluido').length;
+    
+    const recientes = nna.slice(0,5);
+    document.getElementById('tabla-recientes').innerHTML = recientes.length === 0
+      ? `<tr><td colspan="5"><div class="empty"><div class="empty-text">No hay expedientes</div></div></td></tr>`
+      : recientes.map(n=>`
+        <tr>
+          <td class="name">${n.nombre} ${n.primer_apellido||''}</td>
+          <td>${n.curp||'—'}</td>
+          <td>${n.tipo_violencia||'—'}</td>
+          <td><span class="badge ${bEstado[n.estatus]||''}">${lEstado[n.estatus]||n.estatus}</span></td>
+          <td><button class="btn btn-secondary btn-sm" onclick="location.href='ver-nna.html?id=${n.id}'">Ver</button></td>
+        </tr>`).join('');
+  }
+  cargar();
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Registro — No Me Olvides</title>
+  
+  <link rel="icon" href="data:,">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Paleta Modo Noche No Me Olvides */
+      --bg-deep:    #071324;
+      --card-bg:    #0F243D;
+      --input-bg:   #1A365D;
+      --border:     #234066;
+      --accent:     #FFD700;
+      --accent-d:   #D4AC0D;
+      --text-1:     #FFFFFF;
+      --text-2:     #A9CCE3;
+      --text-3:     #7FB3D5;
+      --rose:       #E74C3C;
+      --green:      #2ECC71;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg-deep);color:var(--text-2);min-height:100vh; -webkit-font-smoothing: antialiased;}
+    
+    /* ── Topbar añadida ── */
+    .topbar { height: 65px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 2rem; gap: .5rem; }
+    .topbar-title { font-size:1.1rem; font-weight:700; color: var(--text-1); }
+    .topbar-breadcrumb { color: var(--text-3); font-size: .95rem; }
+
+    /* ── Estructura de página añadida ── */
+    .page-body { padding: 2rem; max-width: 900px; margin: 0 auto; }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+    .page-title { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--text-1); margin-bottom: 0.2rem; }
+    .page-sub { font-size: .95rem; color: var(--text-2); font-weight: 500; }
+    
+    .btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--border); padding: .5rem 1rem; border-radius: 6px; font-family:'DM Sans',sans-serif; font-weight: 700; cursor: pointer; transition: all .2s; }
+    .btn-ghost:hover { background: var(--border); color: var(--text-1); }
+
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .form-section-title { font-size: 1.1rem; color: var(--accent); font-weight: 700; margin-bottom: 1.5rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
+    
+    .form-group{margin-bottom:1.2rem;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+    
+    label{display:block;font-size:.8rem;color:var(--text-3);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em;font-weight:700;}
+    input{width:100%;padding:.9rem 1rem;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:.95rem;transition:all .2s; outline:none;}
+    input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,215,0,0.2);}
+    input::placeholder { color: var(--text-3); opacity: 0.5; }
+    
+    .btn{width:100%;padding:1.1rem;background:var(--accent);color:#071324;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;transition:all .2s;margin-top:1rem;box-shadow:0 4px 10px rgba(255,215,0,0.15);}
+    .btn:hover{background:var(--accent-d);transform:translateY(-2px);}
+    
+    .alert{padding:1rem;border-radius:8px;margin-bottom:1.5rem;font-size:.9rem;font-weight:600;display:none; text-align: center;}
+    .alert-error{background:rgba(231,76,60,0.15);color:var(--rose);border:1px solid var(--rose);}
+    .alert-success{background:rgba(46,204,113,0.15);color:var(--green);border:1px solid var(--green);}
+    
+    .success-view{text-align:center;display:none; margin-top: 2rem;}
+    .success-icon{font-size:4rem;margin-bottom:1rem;}
+    .success-view .title { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--accent); margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-title">Fundación</span>
+  <span class="topbar-breadcrumb">/ Registro de Personal</span>
+</div>
+
+<div class="page-body">
+  <div id="form-view">
+    
+    <div class="page-header">
+      <div>
+        <div class="page-title">Registrar Personal</div>
+        <div class="page-sub">Completa tu registro mediante el enlace de invitación</div>
+      </div>
+      <button class="btn-ghost" onclick="location.href='index.html'">← Volver al Inicio</button>
+    </div>
+    
+    <div class="card">
+      <div class="alert alert-error" id="alert"></div>
+      
+      <div class="form-section-title">Datos Personales</div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre(s) *</label>
+          <input type="text" id="nombre" placeholder="Ej. Ana">
+        </div>
+        <div class="form-group">
+          <label>Primer Apellido *</label>
+          <input type="text" id="p_apellido" placeholder="Ej. López">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Segundo Apellido</label>
+          <input type="text" id="s_apellido" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label>RFC</label>
+          <input type="text" id="rfc" placeholder="Opcional">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>CURP</label>
+          <input type="text" id="curp" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico *</label>
+          <input type="email" id="correo" placeholder="correo@ejemplo.com">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Contraseña *</label>
+          <input type="password" id="pass" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="form-group">
+          <label>Confirmar *</label>
+          <input type="password" id="pass2" placeholder="Repite la contraseña">
+        </div>
+      </div>
+      
+      <button class="btn" onclick="registrar()">Completar Registro</button>
+    </div>
+  </div>
+  
+  <div id="exito-view" class="success-view card">
+    <div class="success-icon">✨</div>
+    <div class="title">¡Registro Exitoso!</div>
+    <div class="page-sub" style="margin-bottom: 2rem; line-height: 1.6;">
+      Tu cuenta ha sido creada correctamente.<br><br>
+      Por seguridad, tu estado es <b style="color:var(--accent);">PENDIENTE</b>.<br>
+      Acude a las oficinas o contacta al administrador para que asigne tu rol y active tu acceso.
+    </div>
+    <button class="btn" onclick="location.href='index.html'">Ir a Iniciar Sesión</button>
+  </div>
+</div>
+
+<script>
+  const API = "http://127.0.0.1:4000";
+  const token = new URLSearchParams(window.location.search).get('token');
+  
+  if (!token) {
+    document.getElementById('form-view').innerHTML = `
+      <div class="card" style="text-align:center; margin-top:2rem;">
+        <div style="font-size:3.5rem;margin-bottom:1rem;">⚠️</div>
+        <div class="page-title" style="font-size:1.8rem; color:var(--rose);">Enlace Inválido</div>
+        <div class="page-sub" style="margin-top: 1rem;">No se encontró un token de invitación válido en la URL. Solicita al Director un nuevo enlace de registro.</div>
+        <button class="btn" style="margin-top:2rem;" onclick="location.href='index.html'">Ir a Iniciar Sesión</button>
+      </div>
+    `;
+  }
+
+  function mostrar(vista) {
+    document.getElementById('form-view').style.display = vista === 'form' ? 'block' : 'none';
+    document.getElementById('exito-view').style.display = vista === 'exito' ? 'block' : 'none';
+  }
+
+  async function registrar() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const p_apellido = document.getElementById('p_apellido').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+    const pass = document.getElementById('pass').value;
+    const pass2 = document.getElementById('pass2').value;
+
+    if (!nombre || !p_apellido || !correo || !pass) {
+      showAlert('Completa todos los campos obligatorios', 'error'); return;
+    }
+    if (pass !== pass2) {
+      showAlert('Las contraseñas no coinciden', 'error'); return;
+    }
+    if (pass.length < 6) {
+      showAlert('La contraseña debe tener al menos 6 caracteres', 'error'); return;
+    }
+
+    const body = {
+      token, nombre, primer_apellido: p_apellido,
+      segundo_apellido: document.getElementById('s_apellido').value,
+      rfc: document.getElementById('rfc').value,
+      curp: document.getElementById('curp').value,
+      correo, contrasena: pass
+    };
+
+    const res = await fetch(`${API}/api/registro`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+    });
+
+    if (res.ok) { mostrar('exito'); }
+    else {
+      const data = await res.json();
+      showAlert(data.detail||'Error al registrar', 'error');
+    }
+  }
+
+  function showAlert(msg, tipo) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = `alert alert-${tipo}`;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 4000);
+  }
+</script>
+</body>
+</html>

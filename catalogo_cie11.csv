@@ -1,0 +1,39 @@
+id,codigo_cie,nombre,es_cronica,poblacion
+13,6A70,Episodio depresivo único,f,General
+14,6A71,Trastorno depresivo recurrente,t,General
+15,6A72,Distimia,t,General
+16,6A80,Trastorno de ansiedad generalizada,t,General
+17,6B40,Trastorno de estrés postraumático (TEPT),t,General
+18,6B41,Trastorno de estrés postraumático complejo,t,General
+19,6B00,Trastornos de ansiedad por separación,f,NNA
+20,6A02,Trastorno del espectro autista (TEA),t,NNA
+21,6A05,Trastorno por déficit de atención con hiperactividad (TDAH),t,NNA
+22,6A20,Esquizofrenia,t,General
+23,6A60,Trastorno afectivo bipolar,t,Adultos
+24,6C40,Trastorno por consumo de alcohol,t,Adultos
+25,5A10,Diabetes mellitus tipo 1,t,General
+26,5A11,Diabetes mellitus tipo 2,t,Adultos
+27,BA00,Hipertensión arterial esencial,t,Adultos
+28,BA43,Cardiopatía isquémica crónica,t,Adultos
+29,FA00,Artritis reumatoide,t,Adultos
+30,FA01,Osteoartritis,t,Adultos
+31,CB42,Enfermedad pulmonar obstructiva crónica (EPOC),t,Adultos
+32,GB61,Enfermedad renal crónica,t,Adultos
+33,8A20,Epilepsia,t,General
+34,8A80,Migraña crónica,t,General
+35,2C25,Cáncer de mama,t,Adultos
+36,2C82,Cáncer cervicouterino,t,Adultos
+37,CA23,Asma,t,General
+38,1A00,Cólera,f,General
+39,1B10,Tuberculosis pulmonar,f,General
+40,1D01,Dengue,f,General
+41,1F03,Rabia,f,General
+42,1A40,Fiebre tifoidea,f,General
+43,CB41,Neumonía viral,f,General
+44,1D80,Infección por el Virus de la Inmunodeficiencia Humana (VIH),t,General
+45,1A60,Gastroenteritis bacteriana aguda,f,NNA
+46,1F23,Varicela,f,NNA
+47,5B50,Desnutrición severa,f,NNA
+48,5B51,Desnutrición moderada,f,NNA
+49,5B5K,Anemia por deficiencia de hierro,f,General
+50,5B53,Deficiencia de vitamina A,f,NNA

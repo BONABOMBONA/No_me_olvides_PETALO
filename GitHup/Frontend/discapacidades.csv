@@ -1,0 +1,26 @@
+id_discapacidad,tipo,descripcion,grado_dependencia,es_permanente
+1,Física,Limitación para moverse o caminar,Moderada,true
+2,Física,Limitación para usar brazos o manos,Moderada,true
+3,Física,Parálisis parcial,Severa,true
+4,Física,Parálisis total,Gran dependencia,true
+5,Mental,Trastorno de ansiedad,Moderada,false
+6,Mental,Trastorno depresivo,Moderada,false
+7,Mental,Trastorno bipolar,Severa,false
+8,Mental,Esquizofrenia,Severa,true
+9,Mental,Trastorno por estrés postraumático (TEPT),Moderada,false
+10,Intelectual,Discapacidad intelectual leve,Moderada,true
+11,Intelectual,Discapacidad intelectual moderada,Severa,true
+12,Intelectual,Discapacidad intelectual severa,Gran dependencia,true
+13,Intelectual,Síndrome de Down,Severa,true
+14,Intelectual,Trastorno del Espectro Autista (TEA),Severa,true
+15,Visual,Baja visión,Moderada,true
+16,Visual,Ceguera total,Severa,true
+17,Visual,Pérdida visual en un ojo,Moderada,true
+18,Auditiva,Hipoacusia leve,Moderada,true
+19,Auditiva,Hipoacusia severa,Severa,true
+20,Auditiva,Sordera total,Gran dependencia,true
+21,Auditiva,Sordera en un oído,Moderada,true
+22,Múltiple,Discapacidad física y visual,Gran dependencia,true
+23,Múltiple,Discapacidad física e intelectual,Gran dependencia,true
+24,Múltiple,Discapacidad auditiva e intelectual,Gran dependencia,true
+25,Múltiple,Discapacidad física y mental,Gran dependencia,true

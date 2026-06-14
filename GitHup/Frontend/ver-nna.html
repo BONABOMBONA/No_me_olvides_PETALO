@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Ver Expediente — No Me Olvides</title>
+  
+  <link rel="icon" href="data:,">
+  
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="btn btn-ghost btn-sm" onclick="history.back()">← Volver</button>
+        <span class="topbar-title">Expedientes / Detalle NNA</span>
+      </div>
+    </div>
+    <div class="page-body">
+      <div id="contenido-nna">Cargando...</div>
+    </div>
+  </div>
+</div>
+<script src="auth.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebar').innerHTML = renderSidebar('nna');
+  
+  async function cargar() {
+    const id = new URLSearchParams(window.location.search).get('id');
+    const n = await fetch(`${API}/api/nna/${id}`, { headers: authHeaders() }).then(r=>r.json()).catch(()=>null);
+    if(!n) { document.getElementById('contenido-nna').innerHTML = 'Expediente no encontrado'; return; }
+    
+    document.getElementById('contenido-nna').innerHTML = `
+      <div class="page-header">
+        <div><div class="page-title">${n.nombre} ${n.primer_apellido}</div><div class="page-sub">CURP: ${n.curp || 'No registrada'}</div></div>
+        <button class="btn btn-primary" onclick="location.href='editar-nna.html?id=${n.id}'">✏️ Editar Expediente</button>
+      </div>
+      <div class="table-wrap" style="padding:2rem;">
+        <h3 style="margin-bottom:1rem; color:var(--primary);">Datos del Hecho Victimal</h3>
+        <p><strong>Tipo de Violencia:</strong> ${n.tipo_violencia || 'No especificado'}</p>
+        <p><strong>Estatus:</strong> ${n.estatus}</p>
+        <p><strong>Fecha de Ingreso:</strong> ${n.fecha_ingreso ? new Date(n.fecha_ingreso).toLocaleDateString() : '—'}</p>
+      </div>
+    `;
+  }
+  cargar();
+</script>
+</body>
+</html>

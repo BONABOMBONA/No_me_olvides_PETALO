@@ -1,0 +1,18 @@
+# Node
+node_modules/
+dist/
+build/
+
+# Entornos y secretos
+.env
+.env.local
+
+# Python (si usas venv)
+venv/
+__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store

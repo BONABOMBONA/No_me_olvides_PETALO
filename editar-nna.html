@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Editar Expediente — No Me Olvides</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css"> 
+  <style>
+    select[multiple] { height: auto; min-height: 120px; padding: 0.5rem; }
+    select[multiple] option { padding: 0.5rem; border-bottom: 1px solid var(--border); }
+    select[multiple] option:checked { background-color: var(--accent); color: #000; font-weight: bold; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar"><span class="topbar-title">NNA</span><span class="topbar-breadcrumb">/ Editar Expediente</span></div>
+    <div class="page-body">
+      <div class="page-header">
+        <div><div class="page-title">Editar Expediente NNA</div><div class="page-sub" id="expediente-id">Cargando datos...</div></div>
+        <button class="btn btn-ghost" onclick="history.back()">← Volver</button>
+      </div>
+      <div id="alert"></div>
+      
+      <div class="card" id="form-container" style="opacity: 0.5; pointer-events: none;">
+        
+        <div class="form-section">
+          <div class="form-section-title">I. Datos de la Víctima</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Nombre(s) *</label><input id="nombre" type="text" maxlength="50"/></div>
+            <div class="form-group"><label>Primer Apellido *</label><input id="p_apellido" type="text" maxlength="50"/></div>
+            <div class="form-group"><label>Segundo Apellido</label><input id="s_apellido" type="text" maxlength="50"/></div>
+            <div class="form-group"><label>Fecha Nacimiento</label><input id="fecha_nac" type="date"/></div>
+            <div class="form-group"><label>Edad *</label><input id="edad" type="number" min="0" max="99"/></div>
+            <div class="form-group"><label>Sexo</label><select id="sexo"><option value="">Seleccionar</option><option>Hombre</option><option>Mujer</option><option>Otro</option></select></div>
+            <div class="form-group"><label>CURP</label><input id="curp" type="text" maxlength="18"/></div>
+            <div class="form-group"><label>RFC</label><input id="rfc" type="text" maxlength="13"/></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Domicilio (SEPOMEX)</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Calle</label><input id="calle" type="text" maxlength="150"/></div>
+            <div class="form-group"><label>No. Ext.</label><input id="num_ext" type="text" maxlength="20"/></div>
+            <div class="form-group"><label>Código Postal *</label><input id="cp" type="text" maxlength="5"/></div>
+            <div class="form-group"><label>Colonia *</label><select id="id_colonia"><option value="">Cargando...</option></select></div>
+            <div class="form-group"><label>Municipio</label><input id="municipio" type="text" readonly style="background:var(--bg-deep);"/></div>
+            <div class="form-group"><label>Entidad</label><input id="entidad" type="text" readonly style="background:var(--bg-deep);"/></div>
+            <div class="form-group"><label>Teléfono</label><input id="telefono" type="text" maxlength="10"/></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">VIII. Información Complementaria y Red de Apoyo</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Nombre del Tutor/a</label><input id="nombre_tutor" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Parentesco Tutor/a</label><select id="id_parentesco"><option value="">Cargando...</option></select></div>
+            <div class="form-group"><label>Teléfono Tutor</label><input id="telefono_tutor" type="text" maxlength="10"/></div>
+            <div class="form-group"><label>Correo Tutor</label><input id="correo_tutor" type="email" maxlength="100"/></div>
+            
+            <div class="form-group form-full">
+              <label>Enfermedades del Tutor (CIE-11)</label>
+              <select id="ids_enfermedades_tutor" multiple size="4"></select>
+            </div>
+            
+            <div class="form-group form-full">
+              <label>Enfermedades del NNA (CIE-11)</label>
+              <select id="ids_enfermedades" multiple size="4"></select>
+            </div>
+
+            <div class="form-group form-full">
+              <label>Lenguas Indígenas (INALI)</label>
+              <select id="ids_variantes_lengua" multiple size="4"></select>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:1rem;">
+          <button class="btn btn-ghost" onclick="history.back()">Cancelar</button>
+          <button class="btn btn-primary" onclick="actualizarExpediente()">Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="auth.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebar').innerHTML = renderSidebar('nna');
+  const urlParams = new URLSearchParams(window.location.search);
+  const nnaId = urlParams.get('id');
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (!nnaId) { showAlert("ID de expediente no proporcionado", "error"); return; }
+    
+    try {
+      // 1. Cargar todos los catálogos primero
+      const [resPar, resEnf, resLen] = await Promise.all([
+        fetch(`${API}/api/parentescos`, { headers: authHeaders() }),
+        fetch(`${API}/api/enfermedades`, { headers: authHeaders() }),
+        fetch(`${API}/api/lenguas`, { headers: authHeaders() })
+      ]);
+
+      if(resPar.ok) {
+        const data = await resPar.json();
+        document.getElementById('id_parentesco').innerHTML = '<option value="">Seleccionar...</option>' + data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+      }
+      if(resEnf.ok) {
+        const data = await resEnf.json();
+        const opts = data.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+        document.getElementById('ids_enfermedades').innerHTML = opts;
+        document.getElementById('ids_enfermedades_tutor').innerHTML = opts;
+      }
+      if(resLen.ok) {
+        const data = await resLen.json();
+        document.getElementById('ids_variantes_lengua').innerHTML = data.map(l => `<option value="${l.id}">${l.nombre}</option>`).join('');
+      }
+
+      // 2. Cargar los datos específicos del NNA
+      const resNna = await fetch(`${API}/api/nna/${nnaId}`, { headers: authHeaders() });
+      if (resNna.ok) {
+        const nna = await resNna.json();
+        document.getElementById('expediente-id').innerText = `ID: ${nna.id} | FUD`;
+        
+        // Asignar valores básicos
+        ['nombre', 'p_apellido', 's_apellido', 'fecha_nac', 'edad', 'sexo', 'curp', 'rfc', 'calle', 'num_ext', 'telefono', 'nombre_tutor', 'telefono_tutor', 'correo_tutor'].forEach(id => {
+          if(document.getElementById(id) && nna[id]) document.getElementById(id).value = nna[id];
+        });
+
+        // Configurar Selects simples
+        if(nna.id_parentesco) document.getElementById('id_parentesco').value = nna.id_parentesco;
+
+        // SEPOMEX Reverse Lookup (Cargar colonia si existe CP)
+        if(nna.codigo_postal) {
+          document.getElementById('cp').value = nna.codigo_postal;
+          await cargarSEPOMEX(nna.codigo_postal, nna.id_colonia);
+        }
+
+        // Asignar Selects Múltiples (Marcar los que la base de datos nos devuelva)
+        if(nna.ids_enfermedades) marcarMultiples('ids_enfermedades', nna.ids_enfermedades);
+        if(nna.ids_enfermedades_tutor) marcarMultiples('ids_enfermedades_tutor', nna.ids_enfermedades_tutor);
+        if(nna.ids_variantes_lengua) marcarMultiples('ids_variantes_lengua', nna.ids_variantes_lengua);
+
+        // Desbloquear formulario
+        document.getElementById('form-container').style.opacity = '1';
+        document.getElementById('form-container').style.pointerEvents = 'auto';
+
+      } else {
+        showAlert("No se pudo cargar el expediente", "error");
+      }
+    } catch (error) {
+      console.error(error);
+      showAlert("Error de conexión al cargar datos", "error");
+    }
+  });
+
+  // Auxiliar para autollenar SEPOMEX
+  async function cargarSEPOMEX(cp, selectIdColonia = null) {
+    if (cp.length === 5) {
+      try {
+        const res = await fetch(`${API}/api/sepomex/${cp}`, { headers: authHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('entidad').value = data.entidad;
+          document.getElementById('municipio').value = data.municipio;
+          const selectColonia = document.getElementById('id_colonia');
+          selectColonia.innerHTML = '<option value="">Seleccione su colonia...</option>';
+          data.colonias.forEach(col => {
+            selectColonia.innerHTML += `<option value="${col.id}">${col.nombre}</option>`;
+          });
+          if(selectIdColonia) selectColonia.value = selectIdColonia;
+        }
+      } catch(e) { console.error(e); }
+    }
+  }
+
+  // Escuchar cambios en CP
+  document.getElementById('cp').addEventListener('input', function() { cargarSEPOMEX(this.value.trim()); });
+
+  // Auxiliar para marcar múltiples
+  function marcarMultiples(selectId, arrayValues) {
+    const select = document.getElementById(selectId);
+    Array.from(select.options).forEach(opt => {
+      if (arrayValues.includes(parseInt(opt.value))) opt.selected = true;
+    });
+  }
+
+  function g(id) { return document.getElementById(id)?.value.trim() || null; }
+
+  async function actualizarExpediente() {
+    const colSelect = document.getElementById('id_colonia');
+    const body = {
+      nombre: g('nombre'), primer_apellido: g('p_apellido'), segundo_apellido: g('s_apellido'),
+      edad: parseInt(g('edad')) || null, curp: g('curp'), rfc: g('rfc'),
+      codigo_postal: g('cp'), colonia: colSelect.options[colSelect.selectedIndex]?.text || null,
+      telefono: g('telefono'), nombre_tutor: g('nombre_tutor'), telefono_tutor: g('telefono_tutor'),
+      
+      id_parentesco: parseInt(g('id_parentesco')) || null,
+      ids_enfermedades: Array.from(document.getElementById('ids_enfermedades').selectedOptions).map(o => parseInt(o.value)).filter(v => !isNaN(v)),
+      ids_enfermedades_tutor: Array.from(document.getElementById('ids_enfermedades_tutor').selectedOptions).map(o => parseInt(o.value)).filter(v => !isNaN(v)),
+      ids_variantes_lengua: Array.from(document.getElementById('ids_variantes_lengua').selectedOptions).map(o => parseInt(o.value)).filter(v => !isNaN(v))
+    };
+
+    try {
+      const res = await fetch(`${API}/api/nna/${nnaId}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        showAlert('Expediente actualizado exitosamente', 'success');
+        setTimeout(() => location.href = 'lista-nna.html', 1500);
+      } else {
+        const data = await res.json();
+        showAlert(data.detail || 'Error al actualizar', 'error');
+      }
+    } catch (e) { showAlert('Error de conexión', 'error'); }
+  }
+
+  function showAlert(msg, tipo) {
+    const el = document.getElementById('alert');
+    el.innerHTML = `<div class="alert alert-${tipo==='error'?'error':'success'}" style="margin-bottom:1rem;">${msg}</div>`;
+    el.scrollIntoView({ behavior:'smooth' });
+  }
+</script>
+</body>
+</html>
