@@ -16,7 +16,6 @@ async function loginReal(email, password) {
     localStorage.setItem("rol", data.rol);
     localStorage.setItem("nombre", data.nombre);
     
-    // RUTA CORREGIDA: Se eliminó "pages/"
     const dashboards = {
       director: "dashboard-director.html",
       coordinador: "dashboard-director.html",
@@ -37,9 +36,7 @@ function getToken()  { return localStorage.getItem("token"); }
 function getRol()    { return localStorage.getItem("rol"); }
 function getNombre() { return localStorage.getItem("nombre"); }
 
-// Calcula cuántos niveles de profundidad tiene la página actual
 function getBase() {
-  // Como todos los archivos están en la misma carpeta 
   return ""; 
 }
 function logout() {
@@ -72,7 +69,6 @@ function renderSidebar(activo) {
   const esDonante = rol === "donante";
   const base = getBase();
 
-  // RUTAS DEL MENÚ CORREGIDAS
   const navDirector = esDirector ? `
     <div class="nav-label">Gestión</div>
     <div class="nav-item ${activo==='usuarios'?'active':''}" onclick="location.href='${base}lista-usuarios.html'">

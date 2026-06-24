@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Nuevo Usuario — No Me Olvides</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css"> 
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar"><span class="topbar-title">Usuarios</span><span class="topbar-breadcrumb">/ Nuevo Usuario</span></div>
+    <div class="page-body">
+      <div class="page-header">
+        <div><div class="page-title">Nuevo Usuario</div><div class="page-sub">Dar de alta a personal o voluntarios mayores de 18 años</div></div>
+        <button class="btn btn-ghost" onclick="history.back()">← Volver</button>
+      </div>
+      <div id="alert"></div>
+      
+      <div class="card">
+        <div class="form-section">
+          <div class="form-section-title">Datos Personales</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Nombre(s) *</label><input id="nombre" type="text" maxlength="50"/></div>
+            <div class="form-group"><label>Primer Apellido *</label><input id="p_apellido" type="text" maxlength="50"/></div>
+            <div class="form-group"><label>Segundo Apellido</label><input id="s_apellido" type="text" maxlength="50"/></div>
+            <div class="form-group"><label>RFC *</label><input id="rfc" type="text" maxlength="13" oninput="this.value = this.value.toUpperCase()"/></div>
+            <div class="form-group"><label>CURP</label><input id="curp" type="text" maxlength="18" oninput="this.value = this.value.toUpperCase()"/></div>
+            <div class="form-group"><label>Sexo</label><select id="sexo"><option value="">Seleccionar</option><option>Mujer</option><option>Hombre</option><option>Otro</option></select></div>
+            <div class="form-group"><label>Fecha de Nacimiento *</label><input id="fecha_nac" type="date"/></div>
+            <div class="form-group"><label>Edad Calculada</label><input id="edad" type="number" readonly placeholder="Se calcula auto." style="background:var(--bg-deep); opacity:0.8;"/></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Domicilio (Conectado a SEPOMEX)</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Código Postal *</label>
+              <input id="cp" type="text" maxlength="5" placeholder="Ej. 06600"/>
+              <small style="color:var(--text-3); font-size:0.75rem;">Autocompleta Municipio y Entidad</small>
+            </div>
+            <div class="form-group">
+              <label>Colonia / Asentamiento *</label>
+              <select id="id_colonia">
+                <option value="">Primero ingrese un CP...</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Municipio / Alcaldía</label><input id="municipio" type="text" readonly style="background:var(--bg-deep);"/></div>
+            <div class="form-group"><label>Entidad Federativa</label><input id="entidad" type="text" readonly style="background:var(--bg-deep);"/></div>
+            <div class="form-group form-full"><label>Calle y Número</label><input id="calle" type="text" placeholder="Ej. Av. Reforma 250, Int 3"/></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Acceso y Roles</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Correo Electrónico *</label><input id="correo" type="email" maxlength="100"/></div>
+            <div class="form-group"><label>Contraseña Provisional *</label><input id="contrasena" type="password" maxlength="50"/></div>
+            <div class="form-group"><label>Tipo de Usuario *</label>
+              <select id="tipo"><option value="">Seleccionar</option><option value="empleado">Empleado</option><option value="voluntario">Voluntario</option></select>
+            </div>
+            <div class="form-group"><label>Rol en el Sistema *</label>
+              <select id="rol"><option value="">Seleccionar</option><option value="director">Director</option><option value="coordinador">Coordinador</option><option value="psicologo">Psicólogo</option><option value="doctor">Doctor</option><option value="abogado">Abogado</option><option value="donante">Donante</option></select>
+            </div>
+            <div class="form-group"><label>Estado de la Cuenta</label>
+              <select id="estado"><option value="activo">Activo (Acceso Inmediato)</option><option value="pendiente">Pendiente de Verificación</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:1rem;">
+          <button class="btn btn-ghost" onclick="history.back()">Cancelar</button>
+          <button class="btn btn-primary" onclick="registrarUsuario()">Guardar Usuario</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="auth.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebar').innerHTML = renderSidebar('usuarios');
+
+  document.getElementById('fecha_nac').addEventListener('change', function() {
+    const fecha = this.value;
+    if (!fecha) {
+      document.getElementById('edad').value = '';
+      return;
+    }
+    const nacimiento = new Date(fecha);
+    const hoy = new Date();
+    let edadCalculada = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+      edadCalculada--;
+    }
+    document.getElementById('edad').value = edadCalculada;
+  });
+
+  document.getElementById('cp').addEventListener('input', async function() {
+    const cp = this.value.trim();
+    if (cp.length === 5) {
+      try {
+        const res = await fetch(`${API}/api/sepomex/${cp}`, { headers: authHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('entidad').value = data.entidad;
+          document.getElementById('municipio').value = data.municipio;
+          
+          const selectColonia = document.getElementById('id_colonia');
+          selectColonia.innerHTML = '<option value="">Seleccione su colonia...</option>';
+          data.colonias.forEach(col => {
+            selectColonia.innerHTML += `<option value="${col.id}">${col.nombre}</option>`;
+          });
+        } else {
+          document.getElementById('id_colonia').innerHTML = '<option value="">CP Inválido</option>';
+        }
+      } catch(e) { console.error(e); }
+    }
+  });
+
+  function g(id) { return document.getElementById(id)?.value.trim() || null; }
+
+  async function registrarUsuario() {
+    const edadVal = parseInt(g('edad'));
+    if (!g('fecha_nac') || isNaN(edadVal) || edadVal < 18) {
+      showAlert('El personal o voluntarios deben ser mayores de edad (18+ años). Verifique la fecha de nacimiento.', 'error');
+      return;
+    }
+
+    const colSelect = document.getElementById('id_colonia');
+    const colonia = colSelect.options[colSelect.selectedIndex]?.text || '';
+    let direccionCompleta = null;
+    if(g('calle') || g('cp')) {
+        direccionCompleta = `${g('calle') || ''}, Col. ${colonia !== 'Primero ingrese un CP...' && colonia !== 'CP Inválido' ? colonia : ''}, ${g('municipio') || ''}, ${g('entidad') || ''}. CP: ${g('cp') || ''}`.replace(/^[,\s]+|[,\s]+$/g, '');
+    }
+
+    const body = {
+      nombre: g('nombre'),
+      primer_apellido: g('p_apellido'),
+      segundo_apellido: g('s_apellido'),
+      rfc: g('rfc'),
+      curp: g('curp'),
+      sexo: g('sexo'),
+      edad: edadVal,
+      direccion: direccionCompleta,
+      correo: g('correo'),
+      contrasena: g('contrasena'),
+      tipo: g('tipo'),
+      rol: g('rol'),
+      estado: g('estado')
+    };
+
+    if (!body.nombre || !body.primer_apellido || !body.rfc || !body.correo || !body.contrasena || !body.tipo || !body.rol) {
+      showAlert('Faltan campos obligatorios (Nombre, Apellido, RFC, Correo, Contraseña, Tipo, Rol).', 'error');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/api/usuarios`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showAlert('Usuario creado correctamente', 'success');
+        setTimeout(() => location.href = 'lista-usuarios.html', 1500);
+      } else {
+        showAlert(data.detail || 'Error al crear usuario', 'error');
+      }
+    } catch (e) {
+      showAlert('Error de conexión', 'error');
+    }
+  }
+
+  function showAlert(msg, tipo) {
+    const el = document.getElementById('alert');
+    el.innerHTML = `<div class="alert alert-${tipo==='error'?'error':'success'}" style="margin-bottom:1rem;">${msg}</div>`;
+    el.scrollIntoView({ behavior:'smooth' });
+  }
+</script>
+</body>
+</html>

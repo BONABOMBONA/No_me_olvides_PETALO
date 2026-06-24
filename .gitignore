@@ -1,0 +1,7 @@
+.env
+.env.local
+__pycache__/
+**/__pycache__/
+*.pyc
+archivos_duplicados/
+archivos_duplicados/

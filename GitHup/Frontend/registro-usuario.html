@@ -106,45 +106,38 @@
       estado: document.getElementById('estado').value,
     };
 
-    // 1. Revisa que no haya campos vacíos
     if (!body.nombre || !body.primer_apellido || !body.correo || !body.contrasena) {
       showAlert('Completa los campos obligatorios', 'error'); 
       return;
     }
     
-    // Validación de los correos electrónicos
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(body.correo)) {
         showAlert('Ingresa un correo electrónico válido (ejemplo@dominio.com).', 'error');
         return;
     }
     
-    // Validación de la edad si el usuario escribió una
     if (body.edad !== null && (body.edad < 18 || body.edad > 99)) {
         showAlert('La edad debe ser un número entre 18 y 99 años.', 'error');
         return;
     }
 
-    // Validación del tamaño del CURP, siempre debe ser de 18
     if (body.curp && body.curp.length !== 18) {
         showAlert('El CURP no es válido. Debe tener exactamente 18 caracteres.', 'error');
         return;
     }
 
-    // Validación tamaño del RFC, siempre debe ser de 13
     if (body.rfc && body.rfc.length !== 13) {
         showAlert('El RFC no es válido. Debe tener exactamente 13 caracteres.', 'error');
         return;
     }
     
-    // Escáner de seguridad para la contraseña
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+.\-]).{8,}$/;
     if (!passwordRegex.test(body.contrasena)) {
       showAlert('La contraseña debe tener al menos 8 letras, 1 mayúscula, 1 número y 1 símbolo (!@#$%)', 'error'); 
       return; 
     }
 
-    // Mandar datos al backend
     const res = await fetch(`${API}/api/usuarios`, { 
         method: 'POST', 
         headers: authHeaders(), 
@@ -157,11 +150,9 @@
         showAlert('Usuario registrado exitosamente', 'success'); 
         setTimeout(() => location.href = 'lista-usuarios.html', 1500); 
     }  else { 
-        // Mensaje del server
         let mensajeTecnico = data.detail || 'Error al registrar';
         let mensajeEspanol = mensajeTecnico; 
 
-        // Traduccion de errores de PostgreSQL
         if (mensajeTecnico.includes('personal_curp_key')) {
             mensajeEspanol = 'Ya existe una persona registrada con este CURP.';
         } 
@@ -172,12 +163,10 @@
             mensajeEspanol = 'Ya existe una persona registrada con este RFC.';
         }
 
-        // Mensaje traducido
         showAlert(mensajeEspanol, 'error'); 
     }
   }
-
-// ESCUDO ANTI-HACKERS (XSS) 
+ 
   function limpiarTexto(texto) {
     if (!texto) return texto;
     return texto.toString().replace(/</g, "&lt;").replace(/>/g, "&gt;");

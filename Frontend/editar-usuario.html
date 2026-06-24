@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Editar Usuario — No Me Olvides</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <button class="btn btn-ghost btn-sm" onclick="history.back()">← Volver</button>
+        <span class="topbar-title">Personal / Editar Usuario</span>
+      </div>
+    </div>
+    <div class="page-body">
+      <form id="form-editar" onsubmit="guardar(event)">
+        <div class="page-header">
+          <div><div class="page-title">Editar Perfil</div><div class="page-sub" id="sub-titulo">Cargando datos...</div></div>
+          <div style="display:flex;gap:1rem;">
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+          </div>
+        </div>
+        <div id="alert"></div>
+        <div class="card">
+          <div class="form-section">
+            <div class="form-section-title">Datos Personales Básicos</div>
+            <div class="form-grid">
+              <div class="form-group"><label>Nombre(s) *</label><input type="text" id="nombre" required/></div>
+              <div class="form-group"><label>Primer Apellido *</label><input type="text" id="apellido" required/></div>
+              <div class="form-group"><label>Segundo Apellido</label><input type="text" id="s_apellido"/></div>
+              <div class="form-group"><label>RFC</label><input type="text" id="rfc" maxlength="13" oninput="this.value = this.value.toUpperCase()"/></div>
+              <div class="form-group"><label>CURP</label><input type="text" id="curp" maxlength="18" oninput="this.value = this.value.toUpperCase()"/></div>
+              <div class="form-group"><label>Rol en el sistema *</label>
+                <select id="rol" required>
+                  <option value="director">Director</option>
+                  <option value="coordinador">Coordinador</option>
+                  <option value="psicologo">Psicólogo</option>
+                  <option value="doctor">Doctor</option>
+                  <option value="abogado">Abogado</option>
+                  <option value="trabajador_social">Trabajador Social</option>
+                  <option value="donante">Donante</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-section">
+            <div class="form-section-title">Actualizar Domicilio (SEPOMEX)</div>
+            <div class="form-grid">
+              <div class="form-group form-full">
+                <label>Dirección Actual Registrada</label>
+                <input type="text" id="direccion_actual" readonly style="background:var(--bg-deep); opacity:0.8;"/>
+              </div>
+              <div class="form-group">
+                <label>Nuevo Código Postal</label>
+                <input id="cp" type="text" maxlength="5" placeholder="Escriba 5 dígitos para actualizar..."/>
+              </div>
+              <div class="form-group">
+                <label>Nueva Colonia</label>
+                <select id="id_colonia"><option value="">Esperando CP...</option></select>
+              </div>
+              <div class="form-group"><label>Municipio</label><input id="municipio" type="text" readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
+              <div class="form-group"><label>Entidad</label><input id="entidad" type="text" readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
+              <div class="form-group form-full"><label>Nueva Calle y Número</label><input id="calle" type="text" placeholder="Ej. Av. Reforma 250, Int 3"/></div>
+            </div>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="auth.js"></script>
+<script>
+  requireAuth(); requireDirector();
+  document.getElementById('sidebar').innerHTML = renderSidebar('usuarios');
+  const id = new URLSearchParams(window.location.search).get('id');
+
+  async function cargar() {
+    const u = await fetch(`${API}/api/usuarios/${id}`, { headers: authHeaders() }).then(r=>r.json()).catch(()=>null);
+    if(!u) return showAlert('Usuario no encontrado', 'error');
+    
+    document.getElementById('sub-titulo').textContent = `Editando a: ${u.nombre}`;
+    document.getElementById('nombre').value = u.nombre || '';
+    document.getElementById('apellido').value = u.primer_apellido || '';
+    document.getElementById('s_apellido').value = u.segundo_apellido || '';
+    document.getElementById('rfc').value = u.rfc || '';
+    document.getElementById('curp').value = u.curp || '';
+    document.getElementById('rol').value = u.rol || 'psicologo';
+    document.getElementById('direccion_actual').value = u.direccion || 'Sin dirección registrada en el sistema.';
+  }
+
+  document.getElementById('cp').addEventListener('input', async function() {
+    const cp = this.value.trim();
+    if (cp.length === 5) {
+      try {
+        const res = await fetch(`${API}/api/sepomex/${cp}`, { headers: authHeaders() });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('entidad').value = data.entidad;
+          document.getElementById('municipio').value = data.municipio;
+          
+          const selectColonia = document.getElementById('id_colonia');
+          selectColonia.innerHTML = '<option value="">Seleccione su colonia...</option>';
+          data.colonias.forEach(col => {
+            selectColonia.innerHTML += `<option value="${col.id}">${col.nombre}</option>`;
+          });
+        } else {
+          document.getElementById('id_colonia').innerHTML = '<option value="">CP Inválido</option>';
+        }
+      } catch(e) { console.error(e); }
+    }
+  });
+
+  async function guardar(e) {
+    e.preventDefault();
+    
+    const colSelect = document.getElementById('id_colonia');
+    const colonia = colSelect.options[colSelect.selectedIndex]?.text || '';
+    let nuevaDireccion = null;
+    const calle = document.getElementById('calle').value.trim();
+    const cp = document.getElementById('cp').value.trim();
+    
+    if(calle || cp) {
+        nuevaDireccion = `${calle || ''}, Col. ${colonia !== 'Esperando CP...' ? colonia : ''}, ${document.getElementById('municipio').value}, ${document.getElementById('entidad').value}. CP: ${cp}`.replace(/^[,\s]+|[,\s]+$/g, '');
+    }
+
+    const datos = {
+      nombre: document.getElementById('nombre').value.trim(),
+      primer_apellido: document.getElementById('apellido').value.trim(),
+      segundo_apellido: document.getElementById('s_apellido').value.trim() || null,
+      rfc: document.getElementById('rfc').value.trim() || null,
+      curp: document.getElementById('curp').value.trim() || null,
+      rol: document.getElementById('rol').value
+    };
+
+    if(nuevaDireccion) datos.direccion = nuevaDireccion;
+
+    const res = await fetch(`${API}/api/usuarios/${id}`, {
+      method: 'PUT',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    });
+
+    if(res.ok) {
+      showAlert('¡Cambios guardados con éxito!', 'success');
+      setTimeout(() => location.href = 'lista-usuarios.html', 1500);
+    } else {
+      const err = await res.json();
+      showAlert(err.detail || 'Error al guardar', 'error');
+    }
+  }
+
+  function showAlert(msg, tipo) {
+    const el = document.getElementById('alert');
+    el.innerHTML = `<div class="alert alert-${tipo==='error'?'error':'success'}" style="margin-bottom:1rem;">${msg}</div>`;
+    el.scrollIntoView({ behavior:'smooth' });
+  }
+
+  window.onload = cargar;
+</script>
+</body>
+</html>

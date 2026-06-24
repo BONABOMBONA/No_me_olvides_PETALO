@@ -6,7 +6,6 @@ from routes.auth import verificar_token, solo_director
 
 router = APIRouter()
 
-# ── Modelos ──────────────────────────────────────────────────
 class Usuario(BaseModel):
     nombre: str
     primer_apellido: str
@@ -36,8 +35,6 @@ class ActualizarUsuario(BaseModel):
 class CambiarRol(BaseModel):
     rol: str
     estado: str
-
-# ── Rutas ────────────────────────────────────────────────────
 
 @router.get("/api/usuarios")
 def listar_usuarios(usuario=Depends(solo_director)):
@@ -145,7 +142,6 @@ def cambiar_rol(id: int, data: CambiarRol, usuario=Depends(solo_director)):
     cur.close()
     conn.close()
     return {"mensaje": f"Rol actualizado a {data.rol}"}
-
 
 @router.put("/api/usuarios/{id}/restringir")
 def restringir_usuario(id: int, usuario=Depends(solo_director)):

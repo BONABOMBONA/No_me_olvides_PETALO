@@ -10,7 +10,6 @@ router = APIRouter()
 
 HORAS = int(os.getenv("LINK_EXPIRA_HORAS", 48))
 
-# ── Modelo ───────────────────────────────────────────────────
 class NuevoUsuario(BaseModel):
     token: str
     nombre: str
@@ -21,7 +20,6 @@ class NuevoUsuario(BaseModel):
     correo: str
     contrasena: str
 
-# ── Rutas ────────────────────────────────────────────────────
 
 @router.post("/api/invitaciones/generar")
 def generar_link(director=Depends(solo_director)):
@@ -71,7 +69,6 @@ def registrar_con_token(data: NuevoUsuario):
     conn = get_connection()
     cur = conn.cursor()
 
-    # Validar token
     cur.execute("""
         SELECT id, fecha_expira, usado FROM invitaciones WHERE token = %s
     """, (data.token,))
@@ -84,7 +81,6 @@ def registrar_con_token(data: NuevoUsuario):
     if datetime.now() > inv[1]:
         raise HTTPException(status_code=400, detail="Este link ha expirado")
 
-    # Crear usuario con estado pendiente
     try:
         cur.execute("""
             INSERT INTO personal
@@ -98,7 +94,6 @@ def registrar_con_token(data: NuevoUsuario):
         ))
         nuevo_id = cur.fetchone()[0]
 
-        # Marcar token como usado
         cur.execute("UPDATE invitaciones SET usado = true WHERE token = %s", (data.token,))
         conn.commit()
 
@@ -112,7 +107,6 @@ def registrar_con_token(data: NuevoUsuario):
     finally:
         cur.close()
         conn.close()
-
 
 @router.get("/api/invitaciones")
 def listar_invitaciones(director=Depends(solo_director)):

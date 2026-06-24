@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
+from typing import Optional
 from database import get_connection
 from routes.auth import solo_director
 import secrets
@@ -10,18 +11,16 @@ router = APIRouter()
 
 HORAS = int(os.getenv("LINK_EXPIRA_HORAS", 48))
 
-# ── Modelo ───────────────────────────────────────────────────
 class NuevoUsuario(BaseModel):
     token: str
     nombre: str
     primer_apellido: str
-    segundo_apellido: str = None
-    rfc: str = None
-    curp: str = None
+    segundo_apellido: Optional[str] = None
+    rfc: Optional[str] = None
+    curp: Optional[str] = None
     correo: str
     contrasena: str
-
-# ── Rutas ────────────────────────────────────────────────────
+    direccion: Optional[str] = None 
 
 @router.post("/api/invitaciones/generar")
 def generar_link(director=Depends(solo_director)):
@@ -36,6 +35,7 @@ def generar_link(director=Depends(solo_director)):
     conn.commit()
     cur.close()
     conn.close()
+    
     return {
         "token": token,
         "link": f"http://localhost:8080/registro-publico.html?token={token}",
@@ -71,7 +71,6 @@ def registrar_con_token(data: NuevoUsuario):
     conn = get_connection()
     cur = conn.cursor()
 
-    # Validar token
     cur.execute("""
         SELECT id, fecha_expira, usado FROM invitaciones WHERE token = %s
     """, (data.token,))
@@ -84,21 +83,19 @@ def registrar_con_token(data: NuevoUsuario):
     if datetime.now() > inv[1]:
         raise HTTPException(status_code=400, detail="Este link ha expirado")
 
-    # Crear usuario con estado pendiente
     try:
         cur.execute("""
             INSERT INTO personal
                 (nombre, primer_apellido, segundo_apellido, rfc, curp,
-                 correo, contrasena, estado, activo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendiente', false)
+                 correo, contrasena, direccion, estado, activo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'pendiente', false)
             RETURNING id
         """, (
             data.nombre, data.primer_apellido, data.segundo_apellido,
-            data.rfc, data.curp, data.correo, data.contrasena
+            data.rfc, data.curp, data.correo, data.contrasena, data.direccion
         ))
         nuevo_id = cur.fetchone()[0]
 
-        # Marcar token como usado
         cur.execute("UPDATE invitaciones SET usado = true WHERE token = %s", (data.token,))
         conn.commit()
 

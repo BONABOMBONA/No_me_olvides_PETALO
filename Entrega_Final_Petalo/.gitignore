@@ -3,11 +3,11 @@ node_modules/
 dist/
 build/
 
-# Entornos y secretos
+# Entornos
 .env
 .env.local
 
-# Python (si usas venv)
+# Python 
 venv/
 __pycache__/
 *.pyc

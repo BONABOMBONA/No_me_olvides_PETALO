@@ -1,9 +1,3 @@
--- ============================================================
--- Catálogo de Discapacidades — No Me Olvides / PETALO Agency
--- Basado en: LGDNNA, FUD CEAVEM, CIF (OMS)
--- ============================================================
-
--- Tabla principal del catálogo
 CREATE TABLE IF NOT EXISTS catalogo_discapacidades (
     id_discapacidad     SERIAL PRIMARY KEY,
     tipo                VARCHAR(20) NOT NULL CHECK (tipo IN ('Física','Mental','Intelectual','Visual','Auditiva','Múltiple')),
@@ -12,7 +6,6 @@ CREATE TABLE IF NOT EXISTS catalogo_discapacidades (
     es_permanente       BOOLEAN DEFAULT TRUE
 );
 
--- Tabla de relación NNA ↔ Discapacidad (un NNA puede tener varias)
 CREATE TABLE IF NOT EXISTS nna_discapacidades (
     id              SERIAL PRIMARY KEY,
     id_nna          INTEGER REFERENCES nna(id) ON DELETE CASCADE,
@@ -21,7 +14,6 @@ CREATE TABLE IF NOT EXISTS nna_discapacidades (
     fecha_registro  TIMESTAMP DEFAULT NOW()
 );
 
--- Insertar datos del catálogo
 INSERT INTO catalogo_discapacidades (tipo, descripcion, grado_dependencia, es_permanente) VALUES
 ('Física',      'Limitación para moverse o caminar',            'Moderada',        true),
 ('Física',      'Limitación para usar brazos o manos',          'Moderada',        true),

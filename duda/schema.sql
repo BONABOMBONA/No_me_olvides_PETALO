@@ -1,10 +1,3 @@
--- ============================================================
--- No Me Olvides — Fundación Infantil
--- Schema COMPLETO v2 — Incluye catálogo de discapacidades
--- Basado en FUD CEAVEM y LGDNNA
--- ============================================================
-
--- ── PERSONAL ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS personal (
     id                  SERIAL PRIMARY KEY,
     nombre              VARCHAR(100) NOT NULL,
@@ -29,7 +22,6 @@ CREATE TABLE IF NOT EXISTS personal (
     fecha_registro      TIMESTAMP    DEFAULT NOW()
 );
 
--- ── INVITACIONES ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS invitaciones (
     id              SERIAL PRIMARY KEY,
     token           VARCHAR(100) UNIQUE NOT NULL,
@@ -39,7 +31,6 @@ CREATE TABLE IF NOT EXISTS invitaciones (
     usado           BOOLEAN   DEFAULT FALSE
 );
 
--- ── CATÁLOGO DE DISCAPACIDADES (Petalo) ──────────────────────
 CREATE TABLE IF NOT EXISTS catalogo_discapacidades (
     id_discapacidad     SERIAL PRIMARY KEY,
     tipo                VARCHAR(20) NOT NULL CHECK (tipo IN ('Física','Mental','Intelectual','Visual','Auditiva','Múltiple')),
@@ -48,11 +39,9 @@ CREATE TABLE IF NOT EXISTS catalogo_discapacidades (
     es_permanente       BOOLEAN DEFAULT TRUE
 );
 
--- ── NNA ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS nna (
     id                      SERIAL PRIMARY KEY,
 
-    -- SECCIÓN I: Datos de la víctima (hoja 1 FUD)
     nombre                  VARCHAR(100) NOT NULL,
     primer_apellido         VARCHAR(60)  NOT NULL,
     segundo_apellido        VARCHAR(60),
@@ -66,7 +55,6 @@ CREATE TABLE IF NOT EXISTS nna (
     lugar_nac_comunidad     VARCHAR(80),
     estado_civil            VARCHAR(30),
 
-    -- DOMICILIO
     calle                   VARCHAR(120),
     numero_exterior         VARCHAR(20),
     numero_interior         VARCHAR(20),
@@ -77,12 +65,10 @@ CREATE TABLE IF NOT EXISTS nna (
     entidad_federativa      VARCHAR(60),
     telefono                VARCHAR(20),
 
-    -- SECCIÓN II: Tipo de víctima (hoja 2 FUD)
     tipo_victima            VARCHAR(20)  CHECK (tipo_victima IN ('directa', 'indirecta', 'ofendido')),
     nombre_victima_directa  VARCHAR(200),
     relacion_victima        VARCHAR(100),
 
-    -- RELATO DE HECHOS
     lugar_hechos_calle      VARCHAR(120),
     lugar_hechos_colonia    VARCHAR(80),
     lugar_hechos_municipio  VARCHAR(80),
@@ -90,13 +76,11 @@ CREATE TABLE IF NOT EXISTS nna (
     fecha_hechos            DATE,
     relato_hechos           TEXT,
 
-    -- DAÑO (hoja 3 FUD)
     dano_fisico             BOOLEAN DEFAULT FALSE,
     dano_psicologico        BOOLEAN DEFAULT FALSE,
     dano_patrimonial        BOOLEAN DEFAULT FALSE,
     dano_sexual             BOOLEAN DEFAULT FALSE,
 
-    -- INVESTIGACIÓN MINISTERIAL
     denuncio_mp             BOOLEAN DEFAULT FALSE,
     fecha_denuncia_mp       DATE,
     competencia_mp          VARCHAR(20),
@@ -106,7 +90,6 @@ CREATE TABLE IF NOT EXISTS nna (
     numero_averiguacion     VARCHAR(60),
     estado_investigacion    VARCHAR(80),
 
-    -- PROCESO JUDICIAL
     tiene_proceso_judicial  BOOLEAN DEFAULT FALSE,
     fecha_inicio_judicial   DATE,
     competencia_judicial    VARCHAR(20),
@@ -116,10 +99,8 @@ CREATE TABLE IF NOT EXISTS nna (
     numero_proceso          VARCHAR(40),
     estado_proceso          VARCHAR(80),
 
-    -- VULNERABILIDAD (hoja 8 FUD)
     es_menor                BOOLEAN DEFAULT TRUE,
 
-    -- Datos del tutor
     tutor_nombre            VARCHAR(100),
     tutor_primer_apellido   VARCHAR(60),
     tutor_segundo_apellido  VARCHAR(60),
@@ -127,12 +108,10 @@ CREATE TABLE IF NOT EXISTS nna (
     tutor_telefono          VARCHAR(20),
     tutor_correo            VARCHAR(120),
 
-    -- Discapacidad (catálogo Petalo)
     tiene_discapacidad      BOOLEAN DEFAULT FALSE,
     tipo_discapacidad       VARCHAR(20) CHECK (tipo_discapacidad IN ('Física','Mental','Intelectual','Visual','Auditiva','Múltiple')),
     grado_dependencia       VARCHAR(20) CHECK (grado_dependencia IN ('Moderada','Severa','Gran dependencia')),
 
-    -- Idioma / comunidad
     habla_espanol           BOOLEAN DEFAULT TRUE,
     requiere_traductor      BOOLEAN DEFAULT FALSE,
     idioma_lengua           VARCHAR(80),
@@ -141,7 +120,6 @@ CREATE TABLE IF NOT EXISTS nna (
     es_migrante             BOOLEAN DEFAULT FALSE,
     pais_origen             VARCHAR(60),
 
-    -- Tipo de violencia contra las mujeres (hoja 8 FUD)
     violencia_psicologica   BOOLEAN DEFAULT FALSE,
     violencia_fisica        BOOLEAN DEFAULT FALSE,
     violencia_economica     BOOLEAN DEFAULT FALSE,
@@ -150,15 +128,12 @@ CREATE TABLE IF NOT EXISTS nna (
     violencia_obstetrica    BOOLEAN DEFAULT FALSE,
     violencia_feminicida    BOOLEAN DEFAULT FALSE,
 
-    -- Tipo de violencia (campo general)
     tipo_violencia          VARCHAR(50),
 
-    -- Solicitante
     tipo_solicitante        VARCHAR(40),
     nombre_solicitante      VARCHAR(200),
     parentesco_solicitante  VARCHAR(80),
 
-    -- Control
     estatus                 VARCHAR(20) DEFAULT 'sin_proceso'
                                          CHECK (estatus IN ('sin_proceso','en_proceso','concluido')),
     registrado_por          INTEGER REFERENCES personal(id),
@@ -168,7 +143,6 @@ CREATE TABLE IF NOT EXISTS nna (
     ultima_actualizacion    TIMESTAMP
 );
 
--- ── RELACIÓN NNA ↔ DISCAPACIDADES ────────────────────────────
 CREATE TABLE IF NOT EXISTS nna_discapacidades (
     id              SERIAL PRIMARY KEY,
     id_nna          INTEGER REFERENCES nna(id) ON DELETE CASCADE,
@@ -177,7 +151,6 @@ CREATE TABLE IF NOT EXISTS nna_discapacidades (
     fecha_registro  TIMESTAMP DEFAULT NOW()
 );
 
--- ── DATOS DEL CATÁLOGO ───────────────────────────────────────
 INSERT INTO catalogo_discapacidades (tipo, descripcion, grado_dependencia, es_permanente) VALUES
 ('Física',      'Limitación para moverse o caminar',            'Moderada',         true),
 ('Física',      'Limitación para usar brazos o manos',          'Moderada',         true),
@@ -205,7 +178,6 @@ INSERT INTO catalogo_discapacidades (tipo, descripcion, grado_dependencia, es_pe
 ('Múltiple',    'Discapacidad auditiva e intelectual',          'Gran dependencia', true),
 ('Múltiple',    'Discapacidad física y mental',                 'Gran dependencia', true);
 
--- ── DATOS DE PRUEBA ──────────────────────────────────────────
 INSERT INTO personal (nombre, primer_apellido, rfc, curp, correo, contrasena, rol, estado, activo, tipo) VALUES
 ('Director', 'Sistema', 'SIST800101ABC', 'SIST800101HDFRRL01', 'director@fundacion.org', '1234', 'director', 'activo', true, 'empleado'),
 ('Coordinador', 'Sistema', 'COOR800101ABC', 'COOR800101HDFRRL01', 'coordinador@fundacion.org', '1234', 'coordinador', 'activo', true, 'empleado'),

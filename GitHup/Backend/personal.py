@@ -13,10 +13,9 @@ class Personal(BaseModel):
     direccion: Optional[str] = None
     correo: str
     contrasena: str
-    tipo: Optional[str] = None          # empleado | voluntario
-    rol: Optional[str] = None           # director | coordinador | psicologo | ...
-    estado: Optional[str] = "pendiente" # activo | inactivo | pendiente | restringido
-
+    tipo: Optional[str] = None         
+    rol: Optional[str] = None           
+    estado: Optional[str] = "pendiente"
 
 class ActualizarPersonal(BaseModel):
     nombre: Optional[str] = None
@@ -31,5 +30,5 @@ class ActualizarPersonal(BaseModel):
 
 
 class CambiarRol(BaseModel):
-    rol: str     # director | coordinador | psicologo | doctor | abogado | ...
-    estado: str  # activo | inactivo | pendiente | restringido
+    rol: str    
+    estado: str  

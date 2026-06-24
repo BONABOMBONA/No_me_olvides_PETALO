@@ -6,7 +6,6 @@ from routes.auth import verificar_token, solo_director
 
 router = APIRouter()
 
-# ── Modelos ──────────────────────────────────────────────────
 class Usuario(BaseModel):
     nombre: str
     primer_apellido: str
@@ -32,12 +31,11 @@ class ActualizarUsuario(BaseModel):
     edad: Optional[int] = None
     direccion: Optional[str] = None
     tipo: Optional[str] = None
+    rol: Optional[str] = None   
 
 class CambiarRol(BaseModel):
     rol: str
     estado: str
-
-# ── Rutas ────────────────────────────────────────────────────
 
 @router.get("/api/usuarios")
 def listar_usuarios(usuario=Depends(solo_director)):
@@ -169,3 +167,15 @@ def eliminar_usuario(id: int, usuario=Depends(solo_director)):
     cur.close()
     conn.close()
     return {"mensaje": "Usuario eliminado"}
+    
+@router.put("/api/usuarios/{id}/activar")
+def activar_usuario(id: int, usuario=Depends(solo_director)):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE personal SET estado = 'activo', activo = true WHERE id = %s
+    """, (id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return {"mensaje": "Usuario activado correctamente"}

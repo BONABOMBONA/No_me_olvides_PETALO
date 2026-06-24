@@ -10,12 +10,10 @@ security = HTTPBearer()
 
 SECRET = os.getenv("JWT_SECRET", "nommeolvides2026")
 
-# ── Modelos ──────────────────────────────────────────────────
 class LoginData(BaseModel):
     correo: str
     contrasena: str
 
-# ── Helpers ──────────────────────────────────────────────────
 def crear_token(datos: dict):
     return jwt.encode(datos, SECRET, algorithm="HS256")
 
@@ -31,7 +29,6 @@ def solo_director(usuario=Depends(verificar_token)):
         raise HTTPException(status_code=403, detail="No tienes permiso")
     return usuario
 
-# ── Rutas ────────────────────────────────────────────────────
 @router.post("/api/login")
 def login(data: LoginData):
     conn = get_connection()

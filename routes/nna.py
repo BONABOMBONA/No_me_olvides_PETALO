@@ -5,8 +5,11 @@ from typing import Optional, List
 
 router = APIRouter()
 
+class EnfermedadControlada(BaseModel):
+    id_enfermedad: int
+    esta_controlada: bool
+
 class NNA(BaseModel):
-    # ── Datos básicos ──
     nombre: str = Field(..., max_length=50)
     primer_apellido: str = Field(..., max_length=50)
     segundo_apellido: Optional[str] = Field(None, max_length=50)
@@ -22,7 +25,6 @@ class NNA(BaseModel):
     lugar_nac_municipio: Optional[str] = Field(None, max_length=100)
     lugar_nac_comunidad: Optional[str] = Field(None, max_length=100)
 
-    # ── Domicilio ──
     calle: Optional[str] = Field(None, max_length=150)
     numero_exterior: Optional[str] = Field(None, max_length=20)
     numero_interior: Optional[str] = Field(None, max_length=20)
@@ -33,7 +35,6 @@ class NNA(BaseModel):
     entidad_federativa: Optional[str] = Field(None, max_length=100)
     telefono: Optional[str] = Field(None, max_length=10)
 
-    # ── Tipo de víctima y Hechos ──
     tipo_victima: Optional[str] = None
     nombre_victima_directa: Optional[str] = Field(None, max_length=100)
     relacion_victima: Optional[str] = Field(None, max_length=50)
@@ -44,7 +45,6 @@ class NNA(BaseModel):
     fecha_hechos: Optional[str] = None
     relato_hechos: Optional[str] = Field(None, max_length=2000)
 
-    # ── Daños e Investigación ──
     dano_fisico: Optional[bool] = False
     dano_psicologico: Optional[bool] = False
     dano_patrimonial: Optional[bool] = False
@@ -58,7 +58,6 @@ class NNA(BaseModel):
     numero_averiguacion: Optional[str] = Field(None, max_length=50)
     estado_investigacion: Optional[str] = Field(None, max_length=100)
 
-    # ── Red de Apoyo (Tutor) ──
     nombre_tutor: Optional[str] = Field(None, max_length=100)
     telefono_tutor: Optional[str] = Field(None, max_length=10)
     correo_tutor: Optional[str] = Field(None, max_length=100)
@@ -70,9 +69,15 @@ class NNA(BaseModel):
     telefono_emergencia_2: Optional[str] = Field(None, max_length=10)
 
     tipo_violencia: Optional[str] = None
+    
     tiene_discapacidad: Optional[bool] = False
     tipo_discapacidad: Optional[str] = None
     grado_dependencia: Optional[str] = None
+    origen_discapacidad: Optional[str] = None
+    temporalidad: Optional[str] = None
+    ayudas_tecnicas: Optional[str] = None
+    diagnostico_especifico: Optional[str] = Field(None, max_length=255)
+    
     habla_espanol: Optional[bool] = True
     requiere_traductor: Optional[bool] = False
     idioma_lengua: Optional[str] = Field(None, max_length=50)
@@ -83,9 +88,10 @@ class NNA(BaseModel):
     nombre_solicitante: Optional[str] = Field(None, max_length=100)
     parentesco_solicitante: Optional[str] = Field(None, max_length=50)
 
-    # ── Catálogos (Aseguramos que siempre lleguen como listas válidas) ──
-    ids_enfermedades: List[int] = []
+    ids_enfermedades: List[int] = [] 
     ids_enfermedades_tutor: List[int] = []
+    enfermedades_nna: List[EnfermedadControlada] = []
+    enfermedades_tutor: List[EnfermedadControlada] = []
     ids_variantes_lengua: List[int] = []
 
 @router.get("/api/nna")
@@ -109,7 +115,6 @@ def crear_nna(nna: NNA):
         conexion = get_connection()
         cursor = conexion.cursor()
         
-        # 1. Procesar al Tutor (División inteligente de nombre para evitar errores NOT NULL)
         id_tutor_insertado = None
         if nna.nombre_tutor:
             partes = nna.nombre_tutor.strip().split()
@@ -123,21 +128,48 @@ def crear_nna(nna: NNA):
             """, (tutor_nom, tutor_ap1, tutor_ap2, nna.telefono_tutor, nna.correo_tutor, nna.id_parentesco))
             id_tutor_insertado = cursor.fetchone()[0]
             
-            if nna.ids_enfermedades_tutor:
+            if nna.enfermedades_tutor:
+                for enf in nna.enfermedades_tutor:
+                    cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad, esta_controlada) VALUES (%s, %s, %s)", 
+                                   (id_tutor_insertado, enf.id_enfermedad, enf.esta_controlada))
+            elif nna.ids_enfermedades_tutor:
                 for id_enf in nna.ids_enfermedades_tutor:
-                    cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", (id_tutor_insertado, id_enf))
+                    cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", 
+                                   (id_tutor_insertado, id_enf))
 
-        # 2. Insertar al NNA
         cursor.execute("""
-            INSERT INTO nna (nombre, primer_apellido, segundo_apellido, edad, curp, id_tutor) 
-            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
-        """, (nna.nombre, nna.primer_apellido, nna.segundo_apellido, nna.edad, nna.curp, id_tutor_insertado))
+            INSERT INTO nna (
+                nombre, primer_apellido, segundo_apellido, edad, curp, id_tutor, 
+                codigo_postal, telefono, relato_hechos, nacionalidad, tipo_violencia,
+                lugar_nac_entidad, lugar_nac_municipio, tipo_victima
+            ) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+        """, (
+            nna.nombre, nna.primer_apellido, nna.segundo_apellido, nna.edad, nna.curp, id_tutor_insertado,
+            nna.codigo_postal, nna.telefono, nna.relato_hechos, nna.nacionalidad, nna.tipo_violencia,
+            nna.lugar_nac_entidad, nna.lugar_nac_municipio, nna.tipo_victima
+        ))
         id_nna_insertado = cursor.fetchone()[0]
 
-        # 3. Vincular Catálogos del NNA
-        if nna.ids_enfermedades:
+        if nna.tiene_discapacidad:
+            cursor.execute("""
+                INSERT INTO nna_discapacidades (
+                    id_nna, tipo_discapacidad, grado_dependencia,
+                    origen_discapacidad, temporalidad, ayudas_tecnicas, diagnostico_especifico
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (
+                id_nna_insertado, nna.tipo_discapacidad, nna.grado_dependencia,
+                nna.origen_discapacidad, nna.temporalidad, nna.ayudas_tecnicas, nna.diagnostico_especifico
+            ))
+
+        if nna.enfermedades_nna:
+            for enf in nna.enfermedades_nna:
+                cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad, esta_controlada) VALUES (%s, %s, %s)", 
+                               (id_nna_insertado, enf.id_enfermedad, enf.esta_controlada))
+        elif nna.ids_enfermedades:
             for id_enf in nna.ids_enfermedades:
-                cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", (id_nna_insertado, id_enf))
+                cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", 
+                               (id_nna_insertado, id_enf))
                 
         if nna.ids_variantes_lengua:
             for id_var in nna.ids_variantes_lengua:
@@ -145,17 +177,14 @@ def crear_nna(nna: NNA):
 
         conexion.commit()
         return {"mensaje": "Expediente guardado exitosamente", "id_nna": id_nna_insertado}
-        
     except Exception as e:
-        if conexion:
-            conexion.rollback()
+        if conexion: conexion.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         if conexion:
             cursor.close()
             conexion.close()
 
-# ── Rutas de Catálogos para los menús desplegables ──
 @router.get("/api/parentescos")
 def obtener_parentescos():
     conexion = get_connection()
@@ -170,21 +199,17 @@ def obtener_parentescos():
 def obtener_enfermedades():
     conexion = get_connection()
     cursor = conexion.cursor()
-    # ESTA ES LA LÍNEA QUE CAMBIA: Ahora apunta a catalogo_enfermedades
-    cursor.execute("SELECT id, nombre FROM catalogo_enfermedades ORDER BY nombre ASC")
+    cursor.execute("SELECT id, nombre, codigo_oms FROM catalogo_enfermedades ORDER BY nombre ASC")
     resultados = [dict(zip([d[0] for d in cursor.description], fila)) for fila in cursor.fetchall()]
     cursor.close()
     conexion.close()
     return resultados
     
-# ── RUTAS DE LOS NUEVOS CATÁLOGOS ──
-
 @router.get("/api/lenguas")
 def obtener_lenguas():
     conexion = get_connection()
     cursor = conexion.cursor()
-    # Traemos las variantes del INALI
-    cursor.execute("SELECT id, variante as nombre FROM catalogo_lenguas ORDER BY variante ASC")
+    cursor.execute("SELECT id, agrupacion || ' - ' || variante as nombre FROM catalogo_lenguas ORDER BY agrupacion ASC, variante ASC")
     resultados = [dict(zip([d[0] for d in cursor.description], fila)) for fila in cursor.fetchall()]
     cursor.close()
     conexion.close()
@@ -194,7 +219,6 @@ def obtener_lenguas():
 def buscar_cp(cp: str):
     conexion = get_connection()
     cursor = conexion.cursor()
-    # Buscamos todas las colonias de ese CP
     cursor.execute("""
         SELECT id, asentamiento as colonia, municipio, entidad_federativa 
         FROM catalogo_sepomex 
@@ -203,25 +227,29 @@ def buscar_cp(cp: str):
     resultados = [dict(zip([d[0] for d in cursor.description], fila)) for fila in cursor.fetchall()]
     cursor.close()
     conexion.close()
-    
     if not resultados:
         raise HTTPException(status_code=404, detail="Código Postal no encontrado en SEPOMEX")
-    
-    # Devolvemos la entidad, municipio y la lista de colonias posibles
     return {
         "entidad": resultados[0]["entidad_federativa"],
         "municipio": resultados[0]["municipio"],
         "colonias": [{"id": r["id"], "nombre": r["colonia"]} for r in resultados]
     }
-    
-#NUEVO AGREGADO    
-    
+
+@router.get("/api/discapacidades")
+def obtener_catalogo_discapacidades():
+    medio_conexion = get_connection()
+    medio = medio_conexion.cursor()
+    medio.execute("SELECT id_discapacidad, tipo, descripcion, grado_dependencia FROM catalogo_discapacidades")
+    columnas = [desc[0] for desc in medio.description]
+    arreglo_ordenado = [dict(zip(columnas, fila)) for fila in medio.fetchall()]
+    medio.close()
+    medio_conexion.close()
+    return arreglo_ordenado
+
 @router.get("/api/nna/{id}")
 def ver_nna(id: int):
     conexion = get_connection()
     cursor = conexion.cursor()
-    
-    # 1. Obtener datos básicos
     cursor.execute("SELECT * FROM nna WHERE id = %s", (id,))
     row = cursor.fetchone()
     if not row:
@@ -230,24 +258,34 @@ def ver_nna(id: int):
         raise HTTPException(status_code=404, detail="Expediente no encontrado")
         
     nna_data = dict(zip([d[0] for d in cursor.description], row))
+    if 'cp' in nna_data and 'codigo_postal' not in nna_data:
+        nna_data['codigo_postal'] = nna_data['cp']
+    if 'lugar_nac' in nna_data and 'lugar_nacimiento' not in nna_data:
+        nna_data['lugar_nacimiento'] = nna_data['lugar_nac']
     
-    # 2. Obtener datos del Tutor (si existe)
     if nna_data.get('id_tutor'):
         cursor.execute("SELECT nombre as nombre_tutor, telefono as telefono_tutor, correo as correo_tutor, id_parentesco FROM tutores WHERE id = %s", (nna_data['id_tutor'],))
         tutor_row = cursor.fetchone()
         if tutor_row:
             nna_data.update(dict(zip([d[0] for d in cursor.description], tutor_row)))
-            
-        # Enfermedades del Tutor
         cursor.execute("SELECT id_enfermedad FROM padece_tutor WHERE id_tutor = %s", (nna_data['id_tutor'],))
         nna_data['ids_enfermedades_tutor'] = [r[0] for r in cursor.fetchall()]
 
-    # 3. Obtener tablas puente del NNA
     cursor.execute("SELECT id_enfermedad FROM padece_nna WHERE id_nna = %s", (id,))
     nna_data['ids_enfermedades'] = [r[0] for r in cursor.fetchall()]
-    
     cursor.execute("SELECT id_lengua FROM habla_nna WHERE id_nna = %s", (id,))
     nna_data['ids_variantes_lengua'] = [r[0] for r in cursor.fetchall()]
+    
+    cursor.execute("SELECT * FROM nna_discapacidades WHERE id_nna = %s", (id,))
+    discapacidad_row = cursor.fetchone()
+    if discapacidad_row:
+        col_disc = [desc[0] for desc in cursor.description]
+        datos_disc = dict(zip(col_disc, discapacidad_row))
+        datos_disc.pop('id_nna', None) 
+        nna_data.update(datos_disc)
+        nna_data['tiene_discapacidad'] = True
+    else:
+        nna_data['tiene_discapacidad'] = False
     
     cursor.close()
     conexion.close()
@@ -259,40 +297,55 @@ def actualizar_nna(id: int, data: NNA):
     try:
         conexion = get_connection()
         cursor = conexion.cursor()
-        
-        # Obtener el id_tutor actual
         cursor.execute("SELECT id_tutor FROM nna WHERE id = %s", (id,))
         id_tutor = cursor.fetchone()[0]
         
-        # 1. Actualizar NNA
         cursor.execute("""
             UPDATE nna SET nombre=%s, primer_apellido=%s, segundo_apellido=%s, 
-            edad=%s, curp=%s, rfc=%s, codigo_postal=%s, telefono=%s
+            edad=%s, curp=%s, rfc=%s, codigo_postal=%s, telefono=%s, relato_hechos=%s
             WHERE id=%s
-        """, (data.nombre, data.primer_apellido, data.segundo_apellido, data.edad, 
-              data.curp, data.rfc, data.codigo_postal, data.telefono, id))
+        """, (data.nombre, data.primer_apellido, data.segundo_apellido, data.edad, data.curp, data.rfc, data.codigo_postal, data.telefono, data.relato_hechos, id))
               
-        # 2. Limpiar y recrear tablas puente (Es la forma más segura de actualizar listas)
         cursor.execute("DELETE FROM padece_nna WHERE id_nna = %s", (id,))
-        for id_enf in data.ids_enfermedades:
-            cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad) VALUES (%s, %s)", (id, id_enf))
+        if data.enfermedades_nna:
+            for enf in data.enfermedades_nna:
+                cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad, esta_controlada) VALUES (%s, %s, %s)", 
+                               (id, enf.id_enfermedad, enf.esta_controlada))
+        elif data.ids_enfermedades:
+            for id_enf in data.ids_enfermedades:
+                cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", 
+                               (id, id_enf))
             
         cursor.execute("DELETE FROM habla_nna WHERE id_nna = %s", (id,))
         for id_var in data.ids_variantes_lengua:
-            cursor.execute("INSERT INTO habla_nna (id_nna, id_lengua) VALUES (%s, %s)", (nna_id, id_var))
+            cursor.execute("INSERT INTO habla_nna (id_nna, id_lengua) VALUES (%s, %s)", (id, id_var))
             
-        # 3. Actualizar Tutor
+        cursor.execute("DELETE FROM nna_discapacidades WHERE id_nna = %s", (id,))
+        if data.tiene_discapacidad:
+            cursor.execute("""
+                INSERT INTO nna_discapacidades (
+                    id_nna, tipo_discapacidad, grado_dependencia,
+                    origen_discapacidad, temporalidad, ayudas_tecnicas, diagnostico_especifico
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (id, data.tipo_discapacidad, data.grado_dependencia, data.origen_discapacidad, data.temporalidad, data.ayudas_tecnicas, data.diagnostico_especifico))
+            
         if id_tutor and data.nombre_tutor:
             partes = data.nombre_tutor.strip().split()
             cursor.execute("""
                 UPDATE tutores SET nombre=%s, primer_apellido=%s, segundo_apellido=%s,
                 telefono=%s, correo=%s, id_parentesco=%s WHERE id=%s
-            """, (partes[0], partes[1] if len(partes)>1 else 'N/A', " ".join(partes[2:]) if len(partes)>2 else '',
-                  data.telefono_tutor, data.correo_tutor, data.id_parentesco, id_tutor))
+            """, (partes[0], partes[1] if len(partes)>1 else 'N/A', " ".join(partes[2:]) if len(partes)>2 else '', data.telefono_tutor, data.correo_tutor, data.id_parentesco, id_tutor))
                   
             cursor.execute("DELETE FROM padece_tutor WHERE id_tutor = %s", (id_tutor,))
-            for id_enf in data.ids_enfermedades_tutor:
-                cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad) VALUES (%s, %s)", (id_tutor, id_enf))
+    
+            if data.enfermedades_tutor:
+                for enf in data.enfermedades_tutor:
+                    cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad, esta_controlada) VALUES (%s, %s, %s)", 
+                                   (id_tutor, enf.id_enfermedad, enf.esta_controlada))
+            elif data.ids_enfermedades_tutor:
+                for id_enf in data.ids_enfermedades_tutor:
+                    cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", 
+                                   (id_tutor, id_enf))
                 
         conexion.commit()
         return {"mensaje": "Expediente actualizado exitosamente"}
