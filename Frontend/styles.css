@@ -1,18 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 :root {
-  --bg-deep:    #F5F0E8;
+  --bg-deep:    #E3D5BF;
   --card-bg:    #FFFFFF;
-  --input-bg:   #F0EAE0;
-  --border:     #E3D9CA;
-  --sidebar-bg: #DECFB8;
+  --input-bg:   #EADFCB;
+  --border:     #A0875F;
+  --sidebar-bg: #3D342A;
 
   --accent:     #A07E59;
   --accent-d:   #876641;
 
-  --text-1:     #322C24;
-  --text-2:     #5F564A;
-  --text-3:     #9A8D7B;
+  --text-1:     #1A1A1A;
+  --text-2:     #3A3A3A;
+  --text-3:     #6B6B6B;
 
   --green:      #6E8B5B;
   --purple:     #8A769A;
@@ -178,3 +178,15 @@ select:focus, textarea:focus, input[type="date"]:focus { border-color: var(--acc
   color: var(--green); 
   border-left: 6px solid var(--green);
 }
+
+/* --- Sidebar oscuro: texto claro --- */
+.sidebar .sb-logo-name,
+.sidebar .sb-uname { color: #F5EFE5; }
+.sidebar .sb-logo-sub,
+.sidebar .nav-label { color: #B7A88F; }
+.sidebar .nav-item { color: #D8CDBA; }
+.sidebar .nav-item:hover { background: rgba(255,255,255,0.06); color: #FFFFFF; }
+.sidebar .nav-item.active { background: rgba(255,255,255,0.08); color: var(--accent); }
+.sidebar .sb-logo, .sidebar .sb-user, .sidebar .nav-label { border-color: rgba(255,255,255,0.08); }
+.sidebar .sb-avatar { background: rgba(255,255,255,0.08); }
+.btn-logout { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.12) !important; color: var(--accent) !important; }
