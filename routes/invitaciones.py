@@ -20,7 +20,6 @@ class NuevoUsuario(BaseModel):
     curp: Optional[str] = None
     correo: str
     contrasena: str
-    direccion: Optional[str] = None 
 
 @router.post("/api/invitaciones/generar")
 def generar_link(director=Depends(solo_director)):
@@ -35,10 +34,9 @@ def generar_link(director=Depends(solo_director)):
     conn.commit()
     cur.close()
     conn.close()
-    
     return {
         "token": token,
-        "link": f"http://localhost:8080/registro-publico.html?token={token}",
+        "link": f"http://localhost:5500/registro-publico.html?token={token}",
         "expira": str(expira)
     }
 
@@ -47,22 +45,16 @@ def generar_link(director=Depends(solo_director)):
 def validar_token(token: str):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-        SELECT id, fecha_expira, usado
-        FROM invitaciones
-        WHERE token = %s
-    """, (token,))
+    cur.execute("SELECT id_invitacion, fecha_expira, usado FROM invitaciones WHERE token = %s", (token,))
     inv = cur.fetchone()
     cur.close()
     conn.close()
-
     if not inv:
         raise HTTPException(status_code=404, detail="Link no válido")
     if inv[2]:
         raise HTTPException(status_code=400, detail="Este link ya fue usado")
     if datetime.now() > inv[1]:
         raise HTTPException(status_code=400, detail="Este link ha expirado")
-
     return {"valido": True}
 
 
@@ -70,39 +62,29 @@ def validar_token(token: str):
 def registrar_con_token(data: NuevoUsuario):
     conn = get_connection()
     cur = conn.cursor()
-
-    cur.execute("""
-        SELECT id, fecha_expira, usado FROM invitaciones WHERE token = %s
-    """, (data.token,))
+    cur.execute("SELECT id_invitacion, fecha_expira, usado FROM invitaciones WHERE token = %s", (data.token,))
     inv = cur.fetchone()
-
     if not inv:
         raise HTTPException(status_code=404, detail="Link no válido")
     if inv[2]:
         raise HTTPException(status_code=400, detail="Este link ya fue usado")
     if datetime.now() > inv[1]:
         raise HTTPException(status_code=400, detail="Este link ha expirado")
-
     try:
         cur.execute("""
             INSERT INTO personal
                 (nombre, primer_apellido, segundo_apellido, rfc, curp,
-                 correo, contrasena, direccion, estado, activo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'pendiente', false)
-            RETURNING id
+                 correo, contrasena, estado, activo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendiente', false)
+            RETURNING id_personal
         """, (
             data.nombre, data.primer_apellido, data.segundo_apellido,
-            data.rfc, data.curp, data.correo, data.contrasena, data.direccion
+            data.rfc, data.curp, data.correo, data.contrasena
         ))
         nuevo_id = cur.fetchone()[0]
-
         cur.execute("UPDATE invitaciones SET usado = true WHERE token = %s", (data.token,))
         conn.commit()
-
-        return {
-            "mensaje": "Cuenta creada exitosamente. Acuda a las oficinas para verificar su rol.",
-            "id": nuevo_id
-        }
+        return {"mensaje": "Cuenta creada exitosamente. Acuda a las oficinas para verificar su rol.", "id": nuevo_id}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(e))
@@ -116,10 +98,10 @@ def listar_invitaciones(director=Depends(solo_director)):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
-        SELECT i.id, i.token, i.fecha_creacion, i.fecha_expira, i.usado,
+        SELECT i.id_invitacion, i.token, i.fecha_creacion, i.fecha_expira, i.usado,
                p.nombre as creado_por
         FROM invitaciones i
-        LEFT JOIN personal p ON i.creado_por = p.id
+        LEFT JOIN personal p ON i.creado_por = p.id_personal
         ORDER BY i.fecha_creacion DESC
     """)
     rows = cur.fetchall()

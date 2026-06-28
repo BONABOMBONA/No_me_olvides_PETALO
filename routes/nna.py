@@ -10,103 +10,130 @@ class EnfermedadControlada(BaseModel):
     esta_controlada: bool
 
 class NNA(BaseModel):
-    nombre: str = Field(..., max_length=50)
-    primer_apellido: str = Field(..., max_length=50)
-    segundo_apellido: Optional[str] = Field(None, max_length=50)
+    nombre: str = Field(..., max_length=100)
+    primer_apellido: str = Field(..., max_length=60)
+    segundo_apellido: Optional[str] = Field(None, max_length=60)
     fecha_nacimiento: Optional[str] = None
     edad: Optional[int] = Field(None, ge=0, le=99)
     sexo: Optional[str] = None
-    nacionalidad: Optional[str] = Field(None, max_length=50)
-    curp: Optional[str] = Field(None, min_length=18, max_length=18)
-    rfc: Optional[str] = Field(None, min_length=13, max_length=13)
+    nacionalidad: Optional[str] = None
+    curp: Optional[str] = None
     estado_civil: Optional[str] = None
-    lugar_nac_pais: Optional[str] = Field(None, max_length=50)
-    lugar_nac_entidad: Optional[str] = Field(None, max_length=100)
-    lugar_nac_municipio: Optional[str] = Field(None, max_length=100)
-    lugar_nac_comunidad: Optional[str] = Field(None, max_length=100)
+    lugar_nac_pais: Optional[str] = None
+    lugar_nac_entidad: Optional[str] = None
+    lugar_nac_municipio: Optional[str] = None
+    lugar_nac_comunidad: Optional[str] = None
 
-    calle: Optional[str] = Field(None, max_length=150)
-    numero_exterior: Optional[str] = Field(None, max_length=20)
-    numero_interior: Optional[str] = Field(None, max_length=20)
-    colonia: Optional[str] = Field(None, max_length=100)
-    codigo_postal: Optional[str] = Field(None, max_length=5)
-    localidad: Optional[str] = Field(None, max_length=100)
-    delegacion_municipio: Optional[str] = Field(None, max_length=100)
-    entidad_federativa: Optional[str] = Field(None, max_length=100)
-    telefono: Optional[str] = Field(None, max_length=10)
+    calle: Optional[str] = None
+    numero_exterior: Optional[str] = None
+    numero_interior: Optional[str] = None
+    colonia: Optional[str] = None
+    codigo_postal: Optional[str] = None
 
     tipo_victima: Optional[str] = None
-    nombre_victima_directa: Optional[str] = Field(None, max_length=100)
-    relacion_victima: Optional[str] = Field(None, max_length=50)
-    lugar_hechos_calle: Optional[str] = Field(None, max_length=150)
-    lugar_hechos_colonia: Optional[str] = Field(None, max_length=100)
-    lugar_hechos_municipio: Optional[str] = Field(None, max_length=100)
-    lugar_hechos_entidad: Optional[str] = Field(None, max_length=100)
+    nombre_victima_directa: Optional[str] = None
+    relacion_victima: Optional[str] = None
     fecha_hechos: Optional[str] = None
-    relato_hechos: Optional[str] = Field(None, max_length=2000)
+    relato_hechos: Optional[str] = None
 
     dano_fisico: Optional[bool] = False
     dano_psicologico: Optional[bool] = False
     dano_patrimonial: Optional[bool] = False
     dano_sexual: Optional[bool] = False
+
     denuncio_mp: Optional[bool] = False
     fecha_denuncia_mp: Optional[str] = None
     competencia_mp: Optional[str] = None
-    entidad_mp: Optional[str] = Field(None, max_length=100)
-    delito_mp: Optional[str] = Field(None, max_length=100)
-    agencia_mp: Optional[str] = Field(None, max_length=100)
-    numero_averiguacion: Optional[str] = Field(None, max_length=50)
-    estado_investigacion: Optional[str] = Field(None, max_length=100)
+    entidad_mp: Optional[str] = None
+    delito_mp: Optional[str] = None
+    agencia_mp: Optional[str] = None
+    numero_averiguacion: Optional[str] = None
+    estado_investigacion: Optional[str] = None
 
-    nombre_tutor: Optional[str] = Field(None, max_length=100)
-    telefono_tutor: Optional[str] = Field(None, max_length=10)
-    correo_tutor: Optional[str] = Field(None, max_length=100)
+    nombre_tutor: Optional[str] = None
+    telefono_tutor: Optional[str] = None
+    correo_tutor: Optional[str] = None
     id_parentesco: Optional[int] = None
 
-    contacto_emergencia_1: Optional[str] = Field(None, max_length=100)
-    telefono_emergencia_1: Optional[str] = Field(None, max_length=10)
-    contacto_emergencia_2: Optional[str] = Field(None, max_length=100)
-    telefono_emergencia_2: Optional[str] = Field(None, max_length=10)
-
     tipo_violencia: Optional[str] = None
-    
+
     tiene_discapacidad: Optional[bool] = False
     tipo_discapacidad: Optional[str] = None
     grado_dependencia: Optional[str] = None
-    origen_discapacidad: Optional[str] = None
-    temporalidad: Optional[str] = None
-    ayudas_tecnicas: Optional[str] = None
-    diagnostico_especifico: Optional[str] = Field(None, max_length=255)
-    
+
     habla_espanol: Optional[bool] = True
     requiere_traductor: Optional[bool] = False
-    idioma_lengua: Optional[str] = Field(None, max_length=50)
+    idioma_lengua: Optional[str] = None
     pertenece_indigena: Optional[bool] = False
-    comunidad_indigena: Optional[str] = Field(None, max_length=100)
+    comunidad_indigena: Optional[str] = None
 
     tipo_solicitante: Optional[str] = None
-    nombre_solicitante: Optional[str] = Field(None, max_length=100)
-    parentesco_solicitante: Optional[str] = Field(None, max_length=50)
+    nombre_solicitante: Optional[str] = None
+    parentesco_solicitante: Optional[str] = None
 
-    ids_enfermedades: List[int] = [] 
+    ids_enfermedades: List[int] = []
     ids_enfermedades_tutor: List[int] = []
     enfermedades_nna: List[EnfermedadControlada] = []
     enfermedades_tutor: List[EnfermedadControlada] = []
     ids_variantes_lengua: List[int] = []
+
+
+# ---------- helpers de catálogo (devuelven id o None) ----------
+def _id(cur, sql, val):
+    if val is None or val == "":
+        return None
+    cur.execute(sql, (val,))
+    r = cur.fetchone()
+    return r[0] if r else None
+
+def id_sexo(cur, v):        return _id(cur, "SELECT id_sexo FROM cat_sexo WHERE LOWER(nombre)=LOWER(%s)", v)
+def id_nac(cur, v):         return _id(cur, "SELECT id_nacionalidad FROM cat_nacionalidad WHERE LOWER(nombre)=LOWER(%s)", v)
+def id_ecivil(cur, v):      return _id(cur, "SELECT id_estado_civil FROM cat_estado_civil WHERE LOWER(nombre)=LOWER(%s)", v)
+def id_entidad(cur, v):     return _id(cur, "SELECT id_entidad FROM cat_entidad WHERE LOWER(nombre)=LOWER(%s)", v)
+def id_tvic(cur, v):        return _id(cur, "SELECT id_tipo_victima FROM cat_tipo_victima WHERE LOWER(nombre)=LOWER(%s)", v)
+def id_tdisc(cur, v):       return _id(cur, "SELECT id_tipo_discapacidad FROM cat_tipo_discapacidad WHERE LOWER(nombre)=LOWER(%s)", v)
+def id_grado(cur, v):       return _id(cur, "SELECT id_grado_dependencia FROM cat_grado_dependencia WHERE LOWER(nombre)=LOWER(%s)", v)
+def id_tviol(cur, v):       return _id(cur, "SELECT id_tipo_violencia FROM cat_tipo_violencia WHERE LOWER(nombre)=LOWER(%s)", v)
+def id_tsol(cur, v):
+    if not v:
+        return None
+    cur.execute("SELECT id_tipo_solicitante FROM cat_tipo_solicitante WHERE LOWER(nombre)=LOWER(%s) OR LOWER(clave)=LOWER(%s)", (v, v))
+    r = cur.fetchone()
+    return r[0] if r else None
+
+def id_asentamiento(cur, cp, colonia):
+    if not cp:
+        return None
+    if colonia:
+        cur.execute("SELECT id_asentamiento FROM cat_asentamiento WHERE codigo_postal=%s AND LOWER(nombre)=LOWER(%s) LIMIT 1", (cp, colonia))
+        r = cur.fetchone()
+        if r:
+            return r[0]
+    cur.execute("SELECT id_asentamiento FROM cat_asentamiento WHERE codigo_postal=%s LIMIT 1", (cp,))
+    r = cur.fetchone()
+    return r[0] if r else None
+
 
 @router.get("/api/nna")
 def obtener_nna():
     try:
         conexion = get_connection()
         cursor = conexion.cursor()
-        cursor.execute("SELECT * FROM nna ORDER BY 1 DESC")
-        columnas = [desc[0] for desc in cursor.description]
-        expedientes = [dict(zip(columnas, fila)) for fila in cursor.fetchall()]
+        cursor.execute("""
+            SELECT n.id_nna, n.nombre, n.primer_apellido, n.segundo_apellido,
+                   n.curp, n.estatus, s.nombre AS sexo, n.fecha_ingreso
+            FROM nna n
+            LEFT JOIN cat_sexo s ON n.id_sexo = s.id_sexo
+            ORDER BY n.id_nna DESC
+        """)
+        cols = [d[0] for d in cursor.description]
+        expedientes = [dict(zip(cols, fila)) for fila in cursor.fetchall()]
         cursor.close()
         conexion.close()
         return expedientes
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/api/nna")
 def crear_nna(nna: NNA):
@@ -114,69 +141,118 @@ def crear_nna(nna: NNA):
     try:
         conexion = get_connection()
         cursor = conexion.cursor()
-        
-        id_tutor_insertado = None
+
+        # 1) NNA (entidad principal)
+        cursor.execute("""
+            INSERT INTO nna (nombre, primer_apellido, segundo_apellido, fecha_nacimiento,
+                             id_sexo, id_nacionalidad, curp, id_estado_civil,
+                             lugar_nac_pais, id_entidad_nac, lugar_nac_municipio, lugar_nac_comunidad)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id_nna
+        """, (
+            nna.nombre, nna.primer_apellido, nna.segundo_apellido,
+            nna.fecha_nacimiento or None,
+            id_sexo(cursor, nna.sexo), id_nac(cursor, nna.nacionalidad),
+            nna.curp, id_ecivil(cursor, nna.estado_civil),
+            nna.lugar_nac_pais, id_entidad(cursor, nna.lugar_nac_entidad),
+            nna.lugar_nac_municipio, nna.lugar_nac_comunidad
+        ))
+        id_nna = cursor.fetchone()[0]
+
+        # 2) Domicilio de residencia
+        if nna.codigo_postal or nna.calle:
+            cursor.execute("""
+                INSERT INTO domicilio (id_nna, tipo, id_asentamiento, calle, numero_exterior, numero_interior)
+                VALUES (%s,'residencia',%s,%s,%s,%s)
+            """, (id_nna, id_asentamiento(cursor, nna.codigo_postal, nna.colonia),
+                  nna.calle, nna.numero_exterior, nna.numero_interior))
+
+        # 3) Hechos victimizantes
+        if nna.tipo_victima or nna.relato_hechos or nna.fecha_hechos:
+            cursor.execute("""
+                INSERT INTO hechos_victimizantes (id_nna, id_tipo_victima, nombre_victima_directa,
+                                                  relacion_victima, fecha_hechos, relato)
+                VALUES (%s,%s,%s,%s,%s,%s)
+            """, (id_nna, id_tvic(cursor, nna.tipo_victima), nna.nombre_victima_directa,
+                  nna.relacion_victima, nna.fecha_hechos or None, nna.relato_hechos))
+
+        # 4) Daños (N:M)
+        danos = {"Físico": nna.dano_fisico, "Psicológico": nna.dano_psicologico,
+                 "Patrimonial": nna.dano_patrimonial, "Sexual": nna.dano_sexual}
+        for nombre_dano, marcado in danos.items():
+            if marcado:
+                idd = _id(cursor, "SELECT id_tipo_dano FROM cat_tipo_dano WHERE nombre=%s", nombre_dano)
+                if idd:
+                    cursor.execute("INSERT INTO nna_dano (id_nna, id_tipo_dano) VALUES (%s,%s)", (id_nna, idd))
+
+        # 5) Investigación ministerial
+        if nna.denuncio_mp:
+            cursor.execute("""
+                INSERT INTO investigacion_ministerial (id_nna, denuncio_mp, fecha, competencia,
+                       id_entidad, agencia_mp, numero_registro, delito, estado_investigacion)
+                VALUES (%s,true,%s,%s,%s,%s,%s,%s,%s)
+            """, (id_nna, nna.fecha_denuncia_mp or None, nna.competencia_mp,
+                  id_entidad(cursor, nna.entidad_mp), nna.agencia_mp,
+                  nna.numero_averiguacion, nna.delito_mp, nna.estado_investigacion))
+
+        # 6) Violencia (N:M)
+        if nna.tipo_violencia:
+            idv = id_tviol(cursor, nna.tipo_violencia)
+            if idv:
+                cursor.execute("INSERT INTO nna_violencia (id_nna, id_tipo_violencia) VALUES (%s,%s)", (id_nna, idv))
+
+        # 7) Discapacidad (N:M)
+        if nna.tiene_discapacidad and nna.tipo_discapacidad:
+            idtd = id_tdisc(cursor, nna.tipo_discapacidad)
+            if idtd:
+                cursor.execute("""
+                    INSERT INTO nna_discapacidad (id_nna, id_tipo_discapacidad, id_grado_dependencia)
+                    VALUES (%s,%s,%s)
+                """, (id_nna, idtd, id_grado(cursor, nna.grado_dependencia)))
+
+        # 8) Lenguas (N:M)
+        for id_var in nna.ids_variantes_lengua:
+            cursor.execute("INSERT INTO nna_lengua (id_nna, id_lengua) VALUES (%s,%s) ON CONFLICT DO NOTHING",
+                           (id_nna, id_var))
+
+        # 9) Vulnerabilidad
+        cursor.execute("""
+            INSERT INTO vulnerabilidad (id_nna, tiene_discapacidad, habla_espanol,
+                   requiere_traductor, es_indigena, comunidad_indigena)
+            VALUES (%s,%s,%s,%s,%s,%s)
+        """, (id_nna, bool(nna.tiene_discapacidad), bool(nna.habla_espanol),
+              bool(nna.requiere_traductor), bool(nna.pertenece_indigena), nna.comunidad_indigena))
+
+        # 10) Tutor + contacto
         if nna.nombre_tutor:
             partes = nna.nombre_tutor.strip().split()
-            tutor_nom = partes[0] if len(partes) > 0 else "N/A"
-            tutor_ap1 = partes[1] if len(partes) > 1 else "N/A"
-            tutor_ap2 = " ".join(partes[2:]) if len(partes) > 2 else ""
-
             cursor.execute("""
-                INSERT INTO tutores (nombre, primer_apellido, segundo_apellido, telefono, correo, id_parentesco) 
-                VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
-            """, (tutor_nom, tutor_ap1, tutor_ap2, nna.telefono_tutor, nna.correo_tutor, nna.id_parentesco))
-            id_tutor_insertado = cursor.fetchone()[0]
-            
-            if nna.enfermedades_tutor:
-                for enf in nna.enfermedades_tutor:
-                    cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad, esta_controlada) VALUES (%s, %s, %s)", 
-                                   (id_tutor_insertado, enf.id_enfermedad, enf.esta_controlada))
-            elif nna.ids_enfermedades_tutor:
-                for id_enf in nna.ids_enfermedades_tutor:
-                    cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", 
-                                   (id_tutor_insertado, id_enf))
+                INSERT INTO tutor (id_nna, nombre, primer_apellido, segundo_apellido)
+                VALUES (%s,%s,%s,%s) RETURNING id_tutor
+            """, (id_nna, partes[0] if partes else "N/A",
+                  partes[1] if len(partes) > 1 else "",
+                  " ".join(partes[2:]) if len(partes) > 2 else ""))
+            id_tutor = cursor.fetchone()[0]
+            if nna.telefono_tutor:
+                idtc = _id(cursor, "SELECT id_tipo_contacto FROM cat_tipo_contacto WHERE nombre=%s", "Celular")
+                cursor.execute("INSERT INTO contacto (id_tutor, id_tipo_contacto, valor) VALUES (%s,%s,%s)",
+                               (id_tutor, idtc, nna.telefono_tutor))
+            if nna.correo_tutor:
+                idtc = _id(cursor, "SELECT id_tipo_contacto FROM cat_tipo_contacto WHERE nombre=%s", "Correo")
+                cursor.execute("INSERT INTO contacto (id_tutor, id_tipo_contacto, valor) VALUES (%s,%s,%s)",
+                               (id_tutor, idtc, nna.correo_tutor))
 
-        cursor.execute("""
-            INSERT INTO nna (
-                nombre, primer_apellido, segundo_apellido, edad, curp, id_tutor, 
-                codigo_postal, telefono, relato_hechos, nacionalidad, tipo_violencia,
-                lugar_nac_entidad, lugar_nac_municipio, tipo_victima
-            ) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-        """, (
-            nna.nombre, nna.primer_apellido, nna.segundo_apellido, nna.edad, nna.curp, id_tutor_insertado,
-            nna.codigo_postal, nna.telefono, nna.relato_hechos, nna.nacionalidad, nna.tipo_violencia,
-            nna.lugar_nac_entidad, nna.lugar_nac_municipio, nna.tipo_victima
-        ))
-        id_nna_insertado = cursor.fetchone()[0]
-
-        if nna.tiene_discapacidad:
+        # 11) Solicitante
+        if nna.nombre_solicitante or nna.tipo_solicitante:
+            ps = (nna.nombre_solicitante or "").strip().split()
             cursor.execute("""
-                INSERT INTO nna_discapacidades (
-                    id_nna, tipo_discapacidad, grado_dependencia,
-                    origen_discapacidad, temporalidad, ayudas_tecnicas, diagnostico_especifico
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (
-                id_nna_insertado, nna.tipo_discapacidad, nna.grado_dependencia,
-                nna.origen_discapacidad, nna.temporalidad, nna.ayudas_tecnicas, nna.diagnostico_especifico
-            ))
-
-        if nna.enfermedades_nna:
-            for enf in nna.enfermedades_nna:
-                cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad, esta_controlada) VALUES (%s, %s, %s)", 
-                               (id_nna_insertado, enf.id_enfermedad, enf.esta_controlada))
-        elif nna.ids_enfermedades:
-            for id_enf in nna.ids_enfermedades:
-                cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", 
-                               (id_nna_insertado, id_enf))
-                
-        if nna.ids_variantes_lengua:
-            for id_var in nna.ids_variantes_lengua:
-                cursor.execute("INSERT INTO habla_nna (id_nna, id_lengua) VALUES (%s, %s)", (id_nna_insertado, id_var))
+                INSERT INTO solicitante (id_nna, id_tipo_solicitante, nombre, primer_apellido, parentesco)
+                VALUES (%s,%s,%s,%s,%s)
+            """, (id_nna, id_tsol(cursor, nna.tipo_solicitante),
+                  ps[0] if ps else None, " ".join(ps[1:]) if len(ps) > 1 else None,
+                  nna.parentesco_solicitante))
 
         conexion.commit()
-        return {"mensaje": "Expediente guardado exitosamente", "id_nna": id_nna_insertado}
+        return {"mensaje": "Expediente guardado exitosamente", "id_nna": id_nna}
     except Exception as e:
         if conexion: conexion.rollback()
         raise HTTPException(status_code=400, detail=str(e))
@@ -185,174 +261,96 @@ def crear_nna(nna: NNA):
             cursor.close()
             conexion.close()
 
-@router.get("/api/parentescos")
-def obtener_parentescos():
-    conexion = get_connection()
-    cursor = conexion.cursor()
-    cursor.execute("SELECT id, nombre FROM parentescos ORDER BY nombre ASC")
-    resultados = [dict(zip([d[0] for d in cursor.description], fila)) for fila in cursor.fetchall()]
-    cursor.close()
-    conexion.close()
-    return resultados
-
-@router.get("/api/enfermedades")
-def obtener_enfermedades():
-    conexion = get_connection()
-    cursor = conexion.cursor()
-    cursor.execute("SELECT id, nombre, codigo_oms FROM catalogo_enfermedades ORDER BY nombre ASC")
-    resultados = [dict(zip([d[0] for d in cursor.description], fila)) for fila in cursor.fetchall()]
-    cursor.close()
-    conexion.close()
-    return resultados
-    
-@router.get("/api/lenguas")
-def obtener_lenguas():
-    conexion = get_connection()
-    cursor = conexion.cursor()
-    cursor.execute("SELECT id, agrupacion || ' - ' || variante as nombre FROM catalogo_lenguas ORDER BY agrupacion ASC, variante ASC")
-    resultados = [dict(zip([d[0] for d in cursor.description], fila)) for fila in cursor.fetchall()]
-    cursor.close()
-    conexion.close()
-    return resultados
-
-@router.get("/api/sepomex/{cp}")
-def buscar_cp(cp: str):
-    conexion = get_connection()
-    cursor = conexion.cursor()
-    cursor.execute("""
-        SELECT id, asentamiento as colonia, municipio, entidad_federativa 
-        FROM catalogo_sepomex 
-        WHERE codigo_postal = %s
-    """, (cp,))
-    resultados = [dict(zip([d[0] for d in cursor.description], fila)) for fila in cursor.fetchall()]
-    cursor.close()
-    conexion.close()
-    if not resultados:
-        raise HTTPException(status_code=404, detail="Código Postal no encontrado en SEPOMEX")
-    return {
-        "entidad": resultados[0]["entidad_federativa"],
-        "municipio": resultados[0]["municipio"],
-        "colonias": [{"id": r["id"], "nombre": r["colonia"]} for r in resultados]
-    }
-
-@router.get("/api/discapacidades")
-def obtener_catalogo_discapacidades():
-    medio_conexion = get_connection()
-    medio = medio_conexion.cursor()
-    medio.execute("SELECT id_discapacidad, tipo, descripcion, grado_dependencia FROM catalogo_discapacidades")
-    columnas = [desc[0] for desc in medio.description]
-    arreglo_ordenado = [dict(zip(columnas, fila)) for fila in medio.fetchall()]
-    medio.close()
-    medio_conexion.close()
-    return arreglo_ordenado
 
 @router.get("/api/nna/{id}")
 def ver_nna(id: int):
     conexion = get_connection()
     cursor = conexion.cursor()
-    cursor.execute("SELECT * FROM nna WHERE id = %s", (id,))
+    cursor.execute("""
+        SELECT n.*, s.nombre AS sexo, na.nombre AS nacionalidad, ec.nombre AS estado_civil
+        FROM nna n
+        LEFT JOIN cat_sexo s ON n.id_sexo=s.id_sexo
+        LEFT JOIN cat_nacionalidad na ON n.id_nacionalidad=na.id_nacionalidad
+        LEFT JOIN cat_estado_civil ec ON n.id_estado_civil=ec.id_estado_civil
+        WHERE n.id_nna = %s
+    """, (id,))
     row = cursor.fetchone()
     if not row:
-        cursor.close()
-        conexion.close()
+        cursor.close(); conexion.close()
         raise HTTPException(status_code=404, detail="Expediente no encontrado")
-        
-    nna_data = dict(zip([d[0] for d in cursor.description], row))
-    if 'cp' in nna_data and 'codigo_postal' not in nna_data:
-        nna_data['codigo_postal'] = nna_data['cp']
-    if 'lugar_nac' in nna_data and 'lugar_nacimiento' not in nna_data:
-        nna_data['lugar_nacimiento'] = nna_data['lugar_nac']
-    
-    if nna_data.get('id_tutor'):
-        cursor.execute("SELECT nombre as nombre_tutor, telefono as telefono_tutor, correo as correo_tutor, id_parentesco FROM tutores WHERE id = %s", (nna_data['id_tutor'],))
-        tutor_row = cursor.fetchone()
-        if tutor_row:
-            nna_data.update(dict(zip([d[0] for d in cursor.description], tutor_row)))
-        cursor.execute("SELECT id_enfermedad FROM padece_tutor WHERE id_tutor = %s", (nna_data['id_tutor'],))
-        nna_data['ids_enfermedades_tutor'] = [r[0] for r in cursor.fetchall()]
+    data = dict(zip([d[0] for d in cursor.description], row))
 
-    cursor.execute("SELECT id_enfermedad FROM padece_nna WHERE id_nna = %s", (id,))
-    nna_data['ids_enfermedades'] = [r[0] for r in cursor.fetchall()]
-    cursor.execute("SELECT id_lengua FROM habla_nna WHERE id_nna = %s", (id,))
-    nna_data['ids_variantes_lengua'] = [r[0] for r in cursor.fetchall()]
-    
-    cursor.execute("SELECT * FROM nna_discapacidades WHERE id_nna = %s", (id,))
-    discapacidad_row = cursor.fetchone()
-    if discapacidad_row:
-        col_disc = [desc[0] for desc in cursor.description]
-        datos_disc = dict(zip(col_disc, discapacidad_row))
-        datos_disc.pop('id_nna', None) 
-        nna_data.update(datos_disc)
-        nna_data['tiene_discapacidad'] = True
+    cursor.execute("SELECT id_lengua FROM nna_lengua WHERE id_nna=%s", (id,))
+    data["ids_variantes_lengua"] = [r[0] for r in cursor.fetchall()]
+
+    cursor.execute("""SELECT td.nombre, gd.nombre FROM nna_discapacidad nd
+                      LEFT JOIN cat_tipo_discapacidad td ON nd.id_tipo_discapacidad=td.id_tipo_discapacidad
+                      LEFT JOIN cat_grado_dependencia gd ON nd.id_grado_dependencia=gd.id_grado_dependencia
+                      WHERE nd.id_nna=%s LIMIT 1""", (id,))
+    disc = cursor.fetchone()
+    if disc:
+        data["tiene_discapacidad"] = True
+        data["tipo_discapacidad"] = disc[0]
+        data["grado_dependencia"] = disc[1]
     else:
-        nna_data['tiene_discapacidad'] = False
-    
+        data["tiene_discapacidad"] = False
+
+    cursor.execute("SELECT nombre, primer_apellido, segundo_apellido FROM tutor WHERE id_nna=%s LIMIT 1", (id,))
+    t = cursor.fetchone()
+    if t:
+        data["nombre_tutor"] = " ".join([x for x in t if x])
+
     cursor.close()
     conexion.close()
-    return nna_data
+    return data
 
-@router.put("/api/nna/{id}")
-def actualizar_nna(id: int, data: NNA):
-    conexion = None
-    try:
-        conexion = get_connection()
-        cursor = conexion.cursor()
-        cursor.execute("SELECT id_tutor FROM nna WHERE id = %s", (id,))
-        id_tutor = cursor.fetchone()[0]
-        
-        cursor.execute("""
-            UPDATE nna SET nombre=%s, primer_apellido=%s, segundo_apellido=%s, 
-            edad=%s, curp=%s, rfc=%s, codigo_postal=%s, telefono=%s, relato_hechos=%s
-            WHERE id=%s
-        """, (data.nombre, data.primer_apellido, data.segundo_apellido, data.edad, data.curp, data.rfc, data.codigo_postal, data.telefono, data.relato_hechos, id))
-              
-        cursor.execute("DELETE FROM padece_nna WHERE id_nna = %s", (id,))
-        if data.enfermedades_nna:
-            for enf in data.enfermedades_nna:
-                cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad, esta_controlada) VALUES (%s, %s, %s)", 
-                               (id, enf.id_enfermedad, enf.esta_controlada))
-        elif data.ids_enfermedades:
-            for id_enf in data.ids_enfermedades:
-                cursor.execute("INSERT INTO padece_nna (id_nna, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", 
-                               (id, id_enf))
-            
-        cursor.execute("DELETE FROM habla_nna WHERE id_nna = %s", (id,))
-        for id_var in data.ids_variantes_lengua:
-            cursor.execute("INSERT INTO habla_nna (id_nna, id_lengua) VALUES (%s, %s)", (id, id_var))
-            
-        cursor.execute("DELETE FROM nna_discapacidades WHERE id_nna = %s", (id,))
-        if data.tiene_discapacidad:
-            cursor.execute("""
-                INSERT INTO nna_discapacidades (
-                    id_nna, tipo_discapacidad, grado_dependencia,
-                    origen_discapacidad, temporalidad, ayudas_tecnicas, diagnostico_especifico
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (id, data.tipo_discapacidad, data.grado_dependencia, data.origen_discapacidad, data.temporalidad, data.ayudas_tecnicas, data.diagnostico_especifico))
-            
-        if id_tutor and data.nombre_tutor:
-            partes = data.nombre_tutor.strip().split()
-            cursor.execute("""
-                UPDATE tutores SET nombre=%s, primer_apellido=%s, segundo_apellido=%s,
-                telefono=%s, correo=%s, id_parentesco=%s WHERE id=%s
-            """, (partes[0], partes[1] if len(partes)>1 else 'N/A', " ".join(partes[2:]) if len(partes)>2 else '', data.telefono_tutor, data.correo_tutor, data.id_parentesco, id_tutor))
-                  
-            cursor.execute("DELETE FROM padece_tutor WHERE id_tutor = %s", (id_tutor,))
-    
-            if data.enfermedades_tutor:
-                for enf in data.enfermedades_tutor:
-                    cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad, esta_controlada) VALUES (%s, %s, %s)", 
-                                   (id_tutor, enf.id_enfermedad, enf.esta_controlada))
-            elif data.ids_enfermedades_tutor:
-                for id_enf in data.ids_enfermedades_tutor:
-                    cursor.execute("INSERT INTO padece_tutor (id_tutor, id_enfermedad, esta_controlada) VALUES (%s, %s, false)", 
-                                   (id_tutor, id_enf))
-                
-        conexion.commit()
-        return {"mensaje": "Expediente actualizado exitosamente"}
-    except Exception as e:
-        if conexion: conexion.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        if conexion:
-            cursor.close()
-            conexion.close()
+
+# ---------- catálogos para los formularios ----------
+@router.get("/api/lenguas")
+def obtener_lenguas():
+    conexion = get_connection(); cursor = conexion.cursor()
+    cursor.execute("""SELECT id_lengua AS id,
+                      agrupacion || COALESCE(' - ' || variante, '') AS nombre
+                      FROM cat_lengua ORDER BY agrupacion ASC""")
+    res = [dict(zip([d[0] for d in cursor.description], f)) for f in cursor.fetchall()]
+    cursor.close(); conexion.close()
+    return res
+
+@router.get("/api/sepomex/{cp}")
+def buscar_cp(cp: str):
+    conexion = get_connection(); cursor = conexion.cursor()
+    cursor.execute("""
+        SELECT a.id_asentamiento AS id, a.nombre AS colonia, m.nombre AS municipio, e.nombre AS entidad
+        FROM cat_asentamiento a
+        JOIN cat_municipio m ON a.id_municipio=m.id_municipio
+        JOIN cat_entidad e ON m.id_entidad=e.id_entidad
+        WHERE a.codigo_postal = %s
+    """, (cp,))
+    res = [dict(zip([d[0] for d in cursor.description], f)) for f in cursor.fetchall()]
+    cursor.close(); conexion.close()
+    if not res:
+        raise HTTPException(status_code=404, detail="Código Postal no encontrado en SEPOMEX")
+    return {
+        "entidad": res[0]["entidad"],
+        "municipio": res[0]["municipio"],
+        "colonias": [{"id": r["id"], "nombre": r["colonia"]} for r in res]
+    }
+
+@router.get("/api/discapacidades")
+def obtener_catalogo_discapacidades():
+    conexion = get_connection(); cursor = conexion.cursor()
+    cursor.execute("SELECT id_tipo_discapacidad AS id_discapacidad, nombre AS tipo, descripcion FROM cat_tipo_discapacidad")
+    res = [dict(zip([d[0] for d in cursor.description], f)) for f in cursor.fetchall()]
+    cursor.close(); conexion.close()
+    return res
+
+@router.get("/api/parentescos")
+def obtener_parentescos():
+    # No es una tabla del modelo; se devuelve una lista fija para los formularios.
+    parentescos = ["Madre","Padre","Abuelo/a","Tío/a","Hermano/a","Tutor legal","Otro"]
+    return [{"id": i + 1, "nombre": p} for i, p in enumerate(parentescos)]
+
+@router.get("/api/enfermedades")
+def obtener_enfermedades():
+    # El catálogo CIE-11 no forma parte del modelo normalizado; se devuelve vacío.
+    return []

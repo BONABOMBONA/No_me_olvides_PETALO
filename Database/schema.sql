@@ -472,4 +472,4 @@ INSERT INTO cat_lengua (id_familia,agrupacion,estado_region) VALUES
 (11,'Huave','Oaxaca');
 
 -- Usuario administrador semilla (contraseña debe re-hashearse con bcrypt en el backend)
-INSERT INTO personal (nombre,primer_apellido,correo,contrasena,tipo,rol,estado,activo) VALUES ('Director','Sistema','director@fundacion.org','CAMBIAR_POR_HASH_BCRYPT','empleado','director','activo',TRUE);
+INSERT INTO personal (nombre,primer_apellido,correo,contrasena,tipo,rol,estado,activo) VALUES ('Director','Sistema','director@fundacion.org','1234','empleado','director','activo',TRUE);

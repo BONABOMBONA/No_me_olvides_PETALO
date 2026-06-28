@@ -34,7 +34,7 @@ def login(data: LoginData):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "SELECT id, nombre, rol, estado FROM personal WHERE correo = %s AND contrasena = %s",
+        "SELECT id_personal, nombre, rol, estado FROM personal WHERE correo = %s AND contrasena = %s",
         (data.correo, data.contrasena)
     )
     usuario = cur.fetchone()

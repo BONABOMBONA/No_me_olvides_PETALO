@@ -13,8 +13,6 @@ class Usuario(BaseModel):
     rfc: Optional[str] = None
     curp: Optional[str] = None
     sexo: Optional[str] = None
-    edad: Optional[int] = None
-    direccion: Optional[str] = None
     correo: str
     contrasena: str
     tipo: Optional[str] = None
@@ -27,22 +25,26 @@ class ActualizarUsuario(BaseModel):
     segundo_apellido: Optional[str] = None
     rfc: Optional[str] = None
     curp: Optional[str] = None
-    sexo: Optional[str] = None
-    edad: Optional[int] = None
-    direccion: Optional[str] = None
     tipo: Optional[str] = None
-    rol: Optional[str] = None   
+    rol: Optional[str] = None
 
 class CambiarRol(BaseModel):
     rol: str
     estado: str
+
+def id_sexo_por_nombre(cur, sexo):
+    if not sexo:
+        return None
+    cur.execute("SELECT id_sexo FROM cat_sexo WHERE LOWER(nombre)=LOWER(%s)", (sexo,))
+    r = cur.fetchone()
+    return r[0] if r else None
 
 @router.get("/api/usuarios")
 def listar_usuarios(usuario=Depends(solo_director)):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
-        SELECT id, nombre, primer_apellido, segundo_apellido,
+        SELECT id_personal, nombre, primer_apellido, segundo_apellido,
                rfc, correo, rol, estado, tipo, fecha_registro
         FROM personal
         ORDER BY fecha_registro DESC
@@ -60,7 +62,7 @@ def listar_pendientes(usuario=Depends(solo_director)):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
-        SELECT id, nombre, primer_apellido, correo, fecha_registro
+        SELECT id_personal, nombre, primer_apellido, correo, fecha_registro
         FROM personal
         WHERE estado = 'pendiente'
         ORDER BY fecha_registro DESC
@@ -76,13 +78,13 @@ def listar_pendientes(usuario=Depends(solo_director)):
 def ver_usuario(id: int, usuario=Depends(solo_director)):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM personal WHERE id = %s", (id,))
+    cur.execute("SELECT * FROM personal WHERE id_personal = %s", (id,))
     row = cur.fetchone()
+    cols = [desc[0] for desc in cur.description] if cur.description else []
     cur.close()
     conn.close()
     if not row:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    cols = [desc[0] for desc in cur.description] if cur.description else []
     return dict(zip(cols, row))
 
 
@@ -94,12 +96,12 @@ def crear_usuario(data: Usuario, usuario=Depends(solo_director)):
         cur.execute("""
             INSERT INTO personal
                 (nombre, primer_apellido, segundo_apellido, rfc, curp,
-                 sexo, edad, direccion, correo, contrasena, tipo, rol, estado, activo)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            RETURNING id
+                 id_sexo, correo, contrasena, tipo, rol, estado, activo)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            RETURNING id_personal
         """, (
             data.nombre, data.primer_apellido, data.segundo_apellido,
-            data.rfc, data.curp, data.sexo, data.edad, data.direccion,
+            data.rfc, data.curp, id_sexo_por_nombre(cur, data.sexo),
             data.correo, data.contrasena, data.tipo, data.rol,
             data.estado, True if data.estado == "activo" else False
         ))
@@ -123,7 +125,7 @@ def editar_usuario(id: int, data: ActualizarUsuario, usuario=Depends(solo_direct
         raise HTTPException(status_code=400, detail="No hay campos para actualizar")
     sets = ", ".join([f"{k} = %s" for k in campos])
     valores = list(campos.values()) + [id]
-    cur.execute(f"UPDATE personal SET {sets} WHERE id = %s", valores)
+    cur.execute(f"UPDATE personal SET {sets} WHERE id_personal = %s", valores)
     conn.commit()
     cur.close()
     conn.close()
@@ -137,7 +139,7 @@ def cambiar_rol(id: int, data: CambiarRol, usuario=Depends(solo_director)):
     cur.execute("""
         UPDATE personal
         SET rol = %s, estado = %s, activo = %s
-        WHERE id = %s
+        WHERE id_personal = %s
     """, (data.rol, data.estado, True if data.estado == "activo" else False, id))
     conn.commit()
     cur.close()
@@ -149,9 +151,7 @@ def cambiar_rol(id: int, data: CambiarRol, usuario=Depends(solo_director)):
 def restringir_usuario(id: int, usuario=Depends(solo_director)):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-        UPDATE personal SET estado = 'restringido', activo = false WHERE id = %s
-    """, (id,))
+    cur.execute("UPDATE personal SET estado = 'restringido', activo = false WHERE id_personal = %s", (id,))
     conn.commit()
     cur.close()
     conn.close()
@@ -162,19 +162,18 @@ def restringir_usuario(id: int, usuario=Depends(solo_director)):
 def eliminar_usuario(id: int, usuario=Depends(solo_director)):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM personal WHERE id = %s", (id,))
+    cur.execute("DELETE FROM personal WHERE id_personal = %s", (id,))
     conn.commit()
     cur.close()
     conn.close()
     return {"mensaje": "Usuario eliminado"}
-    
+
+
 @router.put("/api/usuarios/{id}/activar")
 def activar_usuario(id: int, usuario=Depends(solo_director)):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-        UPDATE personal SET estado = 'activo', activo = true WHERE id = %s
-    """, (id,))
+    cur.execute("UPDATE personal SET estado = 'activo', activo = true WHERE id_personal = %s", (id,))
     conn.commit()
     cur.close()
     conn.close()
