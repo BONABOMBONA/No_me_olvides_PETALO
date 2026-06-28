@@ -4,7 +4,7 @@
 
 # 🌸 No Me Olvides
 
-### Sistema de Gestión de Expedientes para Fundación Infantil
+### Sistema de Gestión de Expedientes Fundación Infantil
 
 *Manteniendo viva la memoria y el futuro de cada niña, niño y adolecente*
 
@@ -14,7 +14,7 @@ Desarrollado por **Pétalo** · Bases de Datos · ESCOM-IPN · 2026
 
 ---
 
-## Sobre Pétalo...
+## Sobre Pétalo
 
 **Pétalo** es la agencia de consultoría en datos responsable de este proyecto.
 
@@ -81,7 +81,7 @@ Centralizar y resguardar la información de los niños, niñas y adolescentes at
 
 ---
 
-## 🗂️ Estructura del proyecto
+## 🗂️ Estructura del repositorio
 
 ```
 No_me_olvides_PETALO/
@@ -107,6 +107,76 @@ La documentación completa está en `Database/docs/`:
 - **Diccionario de datos** — cada tabla con sus atributos, tipos, claves y descripción.
 - **Proceso de normalización** — descomposición 1FN → 2FN → 3FN tabla por tabla.
 - **Diagrama relacional** — modelo final con todas las relaciones.
+
+---
+
+## Requisitos previos
+
+- Python 3.12+
+- PostgreSQL 16+
+- Git
+
+---
+
+## Instalación (primera vez)
+
+Estos pasos solo se hacen **una vez**, al instalar el proyecto en una máquina nueva.
+
+### 1. Crear el usuario y la base de datos en PostgreSQL
+
+```bash
+sudo -u postgres psql -c "CREATE USER petalo WITH PASSWORD '1234';"
+sudo -u postgres psql -c "CREATE DATABASE no_me_olvides OWNER petalo;"
+```
+
+### 2. Clonar el repositorio
+
+```bash
+git clone https://github.com/BONABOMBONA/No_me_olvides_PETALO.git
+cd No_me_olvides_PETALO
+```
+
+### 3. Cargar el esquema de la base de datos
+
+```bash
+psql -U petalo -d no_me_olvides -f Database/schema.sql
+```
+
+Esto crea las 35 tablas y carga los catálogos de lenguas (INALI) y discapacidad.
+
+### 4. Crear el archivo de variables de entorno
+
+```bash
+cp env.example .env
+nano .env
+```
+
+Llena el archivo con tus datos y guárdalo (en `nano`: `Ctrl+O`, Enter, `Ctrl+X`):
+
+```
+DB_HOST=localhost
+DB_NAME=no_me_olvides
+DB_USER=petalo
+DB_PASS=1234
+JWT_SECRET=una_clave_secreta
+LINK_EXPIRA_HORAS=48
+```
+
+### 5. Crear el entorno virtual e instalar dependencias
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r Database/requirements.txt
+```
+
+### 6. Cargar el catálogo SEPOMEX (códigos postales)
+
+```bash
+python3 importar_sepomex.py
+```
+
+Esto importa las 32 entidades, 2,478 municipios y 158,480 asentamientos a la base de datos.
 
 ---
 
