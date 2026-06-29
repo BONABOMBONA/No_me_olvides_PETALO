@@ -1,10 +1,3 @@
-"""
-Importa el catálogo SEPOMEX (códigos postales) a las tablas normalizadas
-cat_entidad -> cat_municipio -> cat_asentamiento.
-
-Fuente: Database/catalogo_sepomex.csv
-Uso:    python importar_sepomex.py
-"""
 import csv
 from psycopg2.extras import execute_values
 from database import get_connection
@@ -23,9 +16,9 @@ def importar_sepomex():
                        "RESTART IDENTITY CASCADE;")
 
         print(f"Leyendo {ARCHIVO_CSV}...")
-        entidades = {}            # nombre -> id
-        municipios = {}           # (entidad, municipio) -> id
-        asentamientos = []        # (id_municipio, cp, nombre)
+        entidades = {}
+        municipios = {}
+        asentamientos = []
 
         with open(ARCHIVO_CSV, mode="r", encoding="utf-8") as f:
             for fila in csv.DictReader(f):
@@ -36,14 +29,12 @@ def importar_sepomex():
                 entidades.setdefault(ent, None)
                 municipios.setdefault((ent, mun), None)
 
-        # 1) Entidades
         print(f"Insertando {len(entidades)} entidades...")
         for nombre in entidades:
             cursor.execute("INSERT INTO cat_entidad (nombre) VALUES (%s) RETURNING id_entidad;",
                            (nombre,))
             entidades[nombre] = cursor.fetchone()[0]
 
-        # 2) Municipios
         print(f"Insertando {len(municipios)} municipios...")
         for (ent, mun) in municipios:
             cursor.execute(
@@ -51,7 +42,6 @@ def importar_sepomex():
                 (entidades[ent], mun))
             municipios[(ent, mun)] = cursor.fetchone()[0]
 
-        # 3) Asentamientos (en bloque, por velocidad)
         print("Preparando asentamientos...")
         with open(ARCHIVO_CSV, mode="r", encoding="utf-8") as f:
             for fila in csv.DictReader(f):

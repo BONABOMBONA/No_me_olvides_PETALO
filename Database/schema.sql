@@ -1,15 +1,3 @@
--- ============================================================================
---  Proyecto: No Me Olvides  ·  Equipo Pétalo
---  Sistema de gestión de expedientes de NNA víctimas de feminicidio/orfandad
---  Base de Datos · ESCOM-IPN · Prof. Ulises Vélez Saldaña
---
---  Modelo físico normalizado a 3FN.
---  Derivado del Formato Único de Declaración (FUD) de la CEAVEM (8 hojas)
---  y de los catálogos del proyecto (contacto, lengua INALI, discapacidad).
---  SGBD: PostgreSQL 16
--- ============================================================================
-
--- Orden de borrado inverso al de creación para respetar las FK
 DROP TABLE IF EXISTS nna_violencia, nna_dano, nna_lengua, nna_discapacidad,
     contacto, tutor, vulnerabilidad, organismo_ddhh, proceso_judicial,
     investigacion_ministerial, hechos_victimizantes, identificacion,
@@ -22,13 +10,9 @@ DROP TABLE IF EXISTS nna_violencia, nna_dano, nna_lengua, nna_discapacidad,
     cat_nacionalidad, cat_estado_civil, cat_sexo
     CASCADE;
 
--- ============================================================================
---  BLOQUE 1 · CATÁLOGOS SIMPLES (tablas de referencia, dominios cerrados)
--- ============================================================================
-
 CREATE TABLE cat_sexo (
     id_sexo     SERIAL PRIMARY KEY,
-    nombre      VARCHAR(20) NOT NULL UNIQUE          -- Hombre, Mujer, Otro
+    nombre      VARCHAR(20) NOT NULL UNIQUE
 );
 
 CREATE TABLE cat_estado_civil (
@@ -43,13 +27,13 @@ CREATE TABLE cat_nacionalidad (
 
 CREATE TABLE cat_tipo_solicitante (
     id_tipo_solicitante SERIAL PRIMARY KEY,
-    clave               CHAR(1) NOT NULL UNIQUE,     -- A,B,C,D del FUD
+    clave               CHAR(1) NOT NULL UNIQUE,
     nombre              VARCHAR(80) NOT NULL
 );
 
 CREATE TABLE cat_tipo_victima (
     id_tipo_victima SERIAL PRIMARY KEY,
-    nombre          VARCHAR(20) NOT NULL UNIQUE      -- Directa, Indirecta, Ofendido
+    nombre          VARCHAR(20) NOT NULL UNIQUE
 );
 
 CREATE TABLE cat_tipo_documento_id (
@@ -65,7 +49,7 @@ CREATE TABLE cat_tipo_contacto (
 
 CREATE TABLE cat_tipo_dano (
     id_tipo_dano SERIAL PRIMARY KEY,
-    nombre       VARCHAR(20) NOT NULL UNIQUE         -- Físico, Psicológico, Sexual, Patrimonial, Otro
+    nombre       VARCHAR(20) NOT NULL UNIQUE
 );
 
 CREATE TABLE cat_tipo_violencia (
@@ -75,7 +59,7 @@ CREATE TABLE cat_tipo_violencia (
 
 CREATE TABLE cat_grado_dependencia (
     id_grado_dependencia SERIAL PRIMARY KEY,
-    nombre               VARCHAR(20) NOT NULL UNIQUE -- Moderada, Severa, Gran dependencia
+    nombre               VARCHAR(20) NOT NULL UNIQUE
 );
 
 CREATE TABLE cat_tipo_discapacidad (
@@ -83,10 +67,6 @@ CREATE TABLE cat_tipo_discapacidad (
     nombre               VARCHAR(40) NOT NULL UNIQUE,
     descripcion          VARCHAR(200)
 );
-
--- ============================================================================
---  BLOQUE 2 · CATÁLOGOS DE LENGUA (INALI)  ·  jerarquía familia → variante
--- ============================================================================
 
 CREATE TABLE cat_familia_linguistica (
     id_familia SERIAL PRIMARY KEY,
@@ -96,28 +76,24 @@ CREATE TABLE cat_familia_linguistica (
 CREATE TABLE cat_lengua (
     id_lengua        SERIAL PRIMARY KEY,
     id_familia       INTEGER NOT NULL REFERENCES cat_familia_linguistica(id_familia),
-    agrupacion       VARCHAR(80)  NOT NULL,          -- agrupación lingüística
-    variante         VARCHAR(80),                    -- variante lingüística
+    agrupacion       VARCHAR(80)  NOT NULL,
+    variante         VARCHAR(80),
     autodenominacion VARCHAR(80),
     estado_region    VARCHAR(120)
 );
 
 CREATE TABLE cat_modo_adquisicion_lengua (
     id_modo_adquisicion SERIAL PRIMARY KEY,
-    categoria           VARCHAR(40)  NOT NULL UNIQUE,-- L1, L2, extranjera, herencia, señas
+    categoria           VARCHAR(40)  NOT NULL UNIQUE,
     como_se_adquiere    VARCHAR(120),
     contexto            VARCHAR(160)
 );
 
 CREATE TABLE cat_nivel_competencia_oral (
     id_nivel    SERIAL PRIMARY KEY,
-    nivel       VARCHAR(40)  NOT NULL UNIQUE,        -- Básico, Intermedio bajo/alto, Avanzado
+    nivel       VARCHAR(40)  NOT NULL UNIQUE,
     significado VARCHAR(300)
 );
-
--- ============================================================================
---  BLOQUE 3 · CATÁLOGO DE DOMICILIO (SEPOMEX)  ·  entidad → municipio → asentamiento
--- ============================================================================
 
 CREATE TABLE cat_entidad (
     id_entidad SERIAL PRIMARY KEY,
@@ -137,10 +113,6 @@ CREATE TABLE cat_asentamiento (
     codigo_postal   CHAR(5) NOT NULL,
     nombre          VARCHAR(120) NOT NULL
 );
-
--- ============================================================================
---  BLOQUE 4 · USUARIOS DEL SISTEMA (personal e invitaciones de registro)
--- ============================================================================
 
 CREATE TABLE personal (
     id_personal      SERIAL PRIMARY KEY,
@@ -171,11 +143,6 @@ CREATE TABLE invitaciones (
     usado          BOOLEAN   DEFAULT FALSE
 );
 
--- ============================================================================
---  BLOQUE 5 · EXPEDIENTE  ·  entidades fuertes del FUD
--- ============================================================================
-
--- Hoja 1, sección II — datos personales del NNA (víctima)
 CREATE TABLE nna (
     id_nna           SERIAL PRIMARY KEY,
     nombre           VARCHAR(100) NOT NULL,
@@ -196,7 +163,6 @@ CREATE TABLE nna (
     fecha_ingreso    TIMESTAMP DEFAULT NOW()
 );
 
--- Hoja 1, sección I — quien realiza la solicitud
 CREATE TABLE solicitante (
     id_solicitante      SERIAL PRIMARY KEY,
     id_nna              INTEGER NOT NULL REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -204,15 +170,14 @@ CREATE TABLE solicitante (
     nombre              VARCHAR(100),
     primer_apellido     VARCHAR(60),
     segundo_apellido    VARCHAR(60),
-    parentesco          VARCHAR(80),     -- si B: parentesco/relación afectiva
-    cargo               VARCHAR(80),     -- si C: cargo
-    dependencia         VARCHAR(120),    -- si C: dependencia o institución
+    parentesco          VARCHAR(80),
+    cargo               VARCHAR(80),
+    dependencia         VARCHAR(120),
     telefono_movil      VARCHAR(20),
     fecha_solicitud     DATE,
     lugar_solicitud     VARCHAR(120)
 );
 
--- Domicilio (del NNA y/o del lugar de hechos) — normaliza vía SEPOMEX
 CREATE TABLE domicilio (
     id_domicilio    SERIAL PRIMARY KEY,
     id_nna          INTEGER NOT NULL REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -224,7 +189,6 @@ CREATE TABLE domicilio (
     referencias     VARCHAR(200)
 );
 
--- Hoja 2, sección III — identificación de la víctima
 CREATE TABLE identificacion (
     id_identificacion SERIAL PRIMARY KEY,
     id_nna            INTEGER NOT NULL REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -233,18 +197,16 @@ CREATE TABLE identificacion (
     numero_documento  VARCHAR(60)
 );
 
--- Hoja 2, sección IV y V — tipo de víctima, lugar, fecha y relato de los hechos
 CREATE TABLE hechos_victimizantes (
     id_hechos              SERIAL PRIMARY KEY,
     id_nna                 INTEGER NOT NULL REFERENCES nna(id_nna) ON DELETE CASCADE,
     id_tipo_victima        INTEGER REFERENCES cat_tipo_victima(id_tipo_victima),
-    nombre_victima_directa VARCHAR(200),  -- si es indirecta/ofendido
+    nombre_victima_directa VARCHAR(200),
     relacion_victima       VARCHAR(100),
     fecha_hechos           DATE,
     relato                 TEXT
 );
 
--- Hoja 3, sección VII — investigación ante el Ministerio Público
 CREATE TABLE investigacion_ministerial (
     id_investigacion SERIAL PRIMARY KEY,
     id_nna           INTEGER NOT NULL REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -259,7 +221,6 @@ CREATE TABLE investigacion_ministerial (
     estado_investigacion VARCHAR(120)
 );
 
--- Hoja 3 — proceso judicial
 CREATE TABLE proceso_judicial (
     id_proceso     SERIAL PRIMARY KEY,
     id_nna         INTEGER NOT NULL REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -273,7 +234,6 @@ CREATE TABLE proceso_judicial (
     estado_proceso VARCHAR(120)
 );
 
--- Hoja 3 — procedimientos ante organismos de derechos humanos
 CREATE TABLE organismo_ddhh (
     id_organismo    SERIAL PRIMARY KEY,
     id_nna          INTEGER NOT NULL REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -288,7 +248,6 @@ CREATE TABLE organismo_ddhh (
     estado_actual   VARCHAR(120)
 );
 
--- Hoja 8 — condiciones de vulnerabilidad de la víctima
 CREATE TABLE vulnerabilidad (
     id_vulnerabilidad   SERIAL PRIMARY KEY,
     id_nna              INTEGER NOT NULL UNIQUE REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -310,10 +269,9 @@ CREATE TABLE vulnerabilidad (
     fue_desplazado      BOOLEAN DEFAULT FALSE,
     id_entidad_salida   INTEGER REFERENCES cat_entidad(id_entidad),
     id_entidad_receptora INTEGER REFERENCES cat_entidad(id_entidad),
-    motivo_hecho        VARCHAR(120)  -- religión, orientación sexual, género, raza, etc.
+    motivo_hecho        VARCHAR(120)
 );
 
--- Hoja 8 — tutor/a del NNA
 CREATE TABLE tutor (
     id_tutor         SERIAL PRIMARY KEY,
     id_nna           INTEGER NOT NULL REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -323,7 +281,6 @@ CREATE TABLE tutor (
     parentesco       VARCHAR(80)
 );
 
--- Datos de contacto (multivaluado): del NNA o de su tutor/a
 CREATE TABLE contacto (
     id_contacto      SERIAL PRIMARY KEY,
     id_nna           INTEGER REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -332,10 +289,6 @@ CREATE TABLE contacto (
     valor            VARCHAR(160) NOT NULL,
     CHECK (id_nna IS NOT NULL OR id_tutor IS NOT NULL)
 );
-
--- ============================================================================
---  BLOQUE 6 · TABLAS DE ASOCIACIÓN (N:M)  ·  lo que estaba aplanado en "nna"
--- ============================================================================
 
 CREATE TABLE nna_discapacidad (
     id_nna               INTEGER NOT NULL REFERENCES nna(id_nna) ON DELETE CASCADE,
@@ -364,10 +317,6 @@ CREATE TABLE nna_violencia (
     id_tipo_violencia INTEGER NOT NULL REFERENCES cat_tipo_violencia(id_tipo_violencia),
     PRIMARY KEY (id_nna, id_tipo_violencia)
 );
-
--- ============================================================================
---  BLOQUE 7 · DATOS SEMILLA DE CATÁLOGOS
--- ============================================================================
 
 INSERT INTO cat_sexo (nombre) VALUES ('Hombre'),('Mujer'),('Otro');
 INSERT INTO cat_estado_civil (nombre) VALUES ('Soltero/a'),('Casado/a'),('Divorciado/a'),('Viudo/a'),('Unión libre'),('Concubinato'),('Separado/a'),('Otro');
@@ -471,5 +420,4 @@ INSERT INTO cat_lengua (id_familia,agrupacion,estado_region) VALUES
 (10,'Chontal de Oaxaca','Oaxaca'),
 (11,'Huave','Oaxaca');
 
--- Usuario administrador semilla (contraseña debe re-hashearse con bcrypt en el backend)
 INSERT INTO personal (nombre,primer_apellido,correo,contrasena,tipo,rol,estado,activo) VALUES ('Director','Sistema','director@fundacion.org','1234','empleado','director','activo',TRUE);

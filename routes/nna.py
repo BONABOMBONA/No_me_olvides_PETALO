@@ -78,7 +78,6 @@ class NNA(BaseModel):
     ids_variantes_lengua: List[int] = []
 
 
-# ---------- helpers de catálogo (devuelven id o None) ----------
 def _id(cur, sql, val):
     if val is None or val == "":
         return None
@@ -142,7 +141,6 @@ def crear_nna(nna: NNA):
         conexion = get_connection()
         cursor = conexion.cursor()
 
-        # 1) NNA (entidad principal)
         cursor.execute("""
             INSERT INTO nna (nombre, primer_apellido, segundo_apellido, fecha_nacimiento,
                              id_sexo, id_nacionalidad, curp, id_estado_civil,
@@ -158,7 +156,6 @@ def crear_nna(nna: NNA):
         ))
         id_nna = cursor.fetchone()[0]
 
-        # 2) Domicilio de residencia
         if nna.codigo_postal or nna.calle:
             cursor.execute("""
                 INSERT INTO domicilio (id_nna, tipo, id_asentamiento, calle, numero_exterior, numero_interior)
@@ -166,7 +163,6 @@ def crear_nna(nna: NNA):
             """, (id_nna, id_asentamiento(cursor, nna.codigo_postal, nna.colonia),
                   nna.calle, nna.numero_exterior, nna.numero_interior))
 
-        # 3) Hechos victimizantes
         if nna.tipo_victima or nna.relato_hechos or nna.fecha_hechos:
             cursor.execute("""
                 INSERT INTO hechos_victimizantes (id_nna, id_tipo_victima, nombre_victima_directa,
@@ -175,7 +171,6 @@ def crear_nna(nna: NNA):
             """, (id_nna, id_tvic(cursor, nna.tipo_victima), nna.nombre_victima_directa,
                   nna.relacion_victima, nna.fecha_hechos or None, nna.relato_hechos))
 
-        # 4) Daños (N:M)
         danos = {"Físico": nna.dano_fisico, "Psicológico": nna.dano_psicologico,
                  "Patrimonial": nna.dano_patrimonial, "Sexual": nna.dano_sexual}
         for nombre_dano, marcado in danos.items():
@@ -184,7 +179,6 @@ def crear_nna(nna: NNA):
                 if idd:
                     cursor.execute("INSERT INTO nna_dano (id_nna, id_tipo_dano) VALUES (%s,%s)", (id_nna, idd))
 
-        # 5) Investigación ministerial
         if nna.denuncio_mp:
             cursor.execute("""
                 INSERT INTO investigacion_ministerial (id_nna, denuncio_mp, fecha, competencia,
@@ -194,13 +188,11 @@ def crear_nna(nna: NNA):
                   id_entidad(cursor, nna.entidad_mp), nna.agencia_mp,
                   nna.numero_averiguacion, nna.delito_mp, nna.estado_investigacion))
 
-        # 6) Violencia (N:M)
         if nna.tipo_violencia:
             idv = id_tviol(cursor, nna.tipo_violencia)
             if idv:
                 cursor.execute("INSERT INTO nna_violencia (id_nna, id_tipo_violencia) VALUES (%s,%s)", (id_nna, idv))
 
-        # 7) Discapacidad (N:M)
         if nna.tiene_discapacidad and nna.tipo_discapacidad:
             idtd = id_tdisc(cursor, nna.tipo_discapacidad)
             if idtd:
@@ -209,12 +201,10 @@ def crear_nna(nna: NNA):
                     VALUES (%s,%s,%s)
                 """, (id_nna, idtd, id_grado(cursor, nna.grado_dependencia)))
 
-        # 8) Lenguas (N:M)
         for id_var in nna.ids_variantes_lengua:
             cursor.execute("INSERT INTO nna_lengua (id_nna, id_lengua) VALUES (%s,%s) ON CONFLICT DO NOTHING",
                            (id_nna, id_var))
 
-        # 9) Vulnerabilidad
         cursor.execute("""
             INSERT INTO vulnerabilidad (id_nna, tiene_discapacidad, habla_espanol,
                    requiere_traductor, es_indigena, comunidad_indigena)
@@ -222,7 +212,6 @@ def crear_nna(nna: NNA):
         """, (id_nna, bool(nna.tiene_discapacidad), bool(nna.habla_espanol),
               bool(nna.requiere_traductor), bool(nna.pertenece_indigena), nna.comunidad_indigena))
 
-        # 10) Tutor + contacto
         if nna.nombre_tutor:
             partes = nna.nombre_tutor.strip().split()
             cursor.execute("""
@@ -241,7 +230,6 @@ def crear_nna(nna: NNA):
                 cursor.execute("INSERT INTO contacto (id_tutor, id_tipo_contacto, valor) VALUES (%s,%s,%s)",
                                (id_tutor, idtc, nna.correo_tutor))
 
-        # 11) Solicitante
         if nna.nombre_solicitante or nna.tipo_solicitante:
             ps = (nna.nombre_solicitante or "").strip().split()
             cursor.execute("""
@@ -305,7 +293,7 @@ def ver_nna(id: int):
     return data
 
 
-# ---------- catálogos para los formularios ----------
+
 @router.get("/api/lenguas")
 def obtener_lenguas():
     conexion = get_connection(); cursor = conexion.cursor()
@@ -346,11 +334,9 @@ def obtener_catalogo_discapacidades():
 
 @router.get("/api/parentescos")
 def obtener_parentescos():
-    # No es una tabla del modelo; se devuelve una lista fija para los formularios.
     parentescos = ["Madre","Padre","Abuelo/a","Tío/a","Hermano/a","Tutor legal","Otro"]
     return [{"id": i + 1, "nombre": p} for i, p in enumerate(parentescos)]
 
 @router.get("/api/enfermedades")
 def obtener_enfermedades():
-    # El catálogo CIE-11 no forma parte del modelo normalizado; se devuelve vacío.
     return []
