@@ -3,27 +3,16 @@
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Nuevo Expediente — No Me Olvides</title>
-  
   <link rel="icon" href="data:,">
-  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css"> 
+  <link rel="stylesheet" href="styles.css">
   <style>
-    select[multiple] {
-      height: auto;
-      min-height: 120px;
-      padding: 0.5rem;
-    }
-    select[multiple] option {
-      padding: 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    select[multiple] option:checked {
-      background-color: var(--accent);
-      color: #000;
-      font-weight: bold;
-    }
+    select[multiple] { height: auto; min-height: 120px; padding: 0.5rem; }
+    select[multiple] option { padding: 0.5rem; border-bottom: 1px solid var(--border); background: #FFFFFF; color: #1A1A1A; }
+    select[multiple] option:checked { background-color: var(--accent); color: #000; font-weight: bold; }
+    .sub-block { border-top: 1px dashed var(--border); padding-top: 1rem; margin-top: 1rem; }
+    .hint { color: var(--text-3); font-size: 0.78rem; margin-top: 4px; display: block; }
   </style>
 </head>
 <body>
@@ -46,73 +35,101 @@
             <div class="form-group"><label>Primer Apellido *</label><input id="p_apellido" type="text" maxlength="50"/></div>
             <div class="form-group"><label>Segundo Apellido</label><input id="s_apellido" type="text" maxlength="50"/></div>
             <div class="form-group"><label>Fecha de Nacimiento *</label><input id="fecha_nac" type="date"/></div>
-            <div class="form-group"><label>Edad Calculada *</label><input id="edad" type="number" placeholder="Se calcula auto." readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
+            <div class="form-group"><label>Edad *</label><input id="edad" type="number" placeholder="Se calcula auto." readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
             <div class="form-group"><label>Sexo</label>
               <select id="sexo"><option value="">Seleccionar</option><option>Hombre</option><option>Mujer</option><option>Otro</option></select>
             </div>
-            <div class="form-group"><label>Nacionalidad</label><input id="nacionalidad" type="text" value="Mexicana" maxlength="50"/></div>
-            
             <div class="form-group"><label>CURP</label><input id="curp" type="text" maxlength="18" placeholder="18 caracteres" oninput="this.value = this.value.toUpperCase()"/></div>
-            
             <div class="form-group"><label>Estado Civil</label>
               <select id="estado_civil"><option value="">Seleccionar</option><option>Soltero/a</option><option>Casado/a</option><option>Divorciado/a</option><option>Viudo/a</option><option>Unión libre</option></select>
             </div>
+          </div>
+
+          <div class="form-group form-full sub-block">
+            <label>Enfermedades del NNA (Catálogo CIE-11 OMS)</label>
+            <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem; flex-wrap:wrap;">
+              <select id="select_enf_nna" style="flex:1; min-width:200px;"><option value="">Cargando catálogo...</option></select>
+              <label style="display:flex; align-items:center; gap:0.5rem; background: var(--bg-deep); padding: 0 1rem; border-radius: 8px;">¿Controlada?
+                <select id="ctrl_nna" style="padding:0.2rem; border-radius:4px; background:var(--input-bg); color:#1A1A1A; border:1px solid var(--border);"><option value="true">Sí</option><option value="false">No</option></select>
+              </label>
+              <button type="button" class="btn btn-secondary" onclick="addEnfNNA()" style="width:auto; margin:0; padding:0 1rem;">+ Agregar</button>
+            </div>
+            <div id="lista_enf_nna" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+          </div>
+
+          <div class="form-grid sub-block">
             <div class="form-group"><label>País de Nacimiento</label><input id="nac_pais" type="text" value="México" maxlength="50"/></div>
-            <div class="form-group"><label>Entidad Federativa Nac.</label><input id="nac_entidad" type="text" maxlength="100"/></div>
-            <div class="form-group"><label>Delegación/Municipio Nac.</label><input id="nac_municipio" type="text" maxlength="100"/></div>
-            <div class="form-group"><label>Comunidad Nac.</label><input id="nac_comunidad" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Nacionalidad</label><input id="nacionalidad" type="text" value="Mexicana" maxlength="50"/></div>
+            <div class="form-group"><label>Entidad Federativa de Nacimiento</label><input id="nac_entidad" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Delegación/Municipio de Nacimiento</label><input id="nac_municipio" type="text" maxlength="100"/></div>
+            <input id="nac_comunidad" type="hidden"/>
+          </div>
+
+          <div class="form-grid sub-block">
+            <div class="form-group"><label>¿Tiene Discapacidad?</label>
+              <select id="tiene_discapacidad" onchange="toggleDiscapacidad()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+          </div>
+          <div class="form-grid" id="caja_discapacidad" style="display:none;">
+            <div class="form-group"><label>Tipo de Discapacidad</label>
+              <select id="tipo_discapacidad"><option value="">N/A</option><option value="Física">Física</option><option value="Sensorial">Sensorial</option><option value="Intelectual/Cognitiva">Intelectual/Cognitiva</option><option value="Psicosocial">Psicosocial</option><option value="Múltiple">Múltiple</option></select>
+            </div>
+            <div class="form-group"><label>Grado de Dependencia</label>
+              <select id="grado_dependencia"><option value="">N/A</option><option value="Moderada">Moderada</option><option value="Severa">Severa</option><option value="Gran dependencia">Gran dependencia</option></select>
+            </div>
+            <div class="form-group"><label>Origen de la Discapacidad</label>
+              <select id="origenDiscapacidad"><option value="N/A">N/A</option><option value="Congénita">Congénita / De nacimiento</option><option value="Adquirida por enfermedad">Adquirida por enfermedad</option><option value="Accidente">Por accidente</option><option value="Violencia">Relacionada a violencia</option></select>
+            </div>
+            <div class="form-group"><label>Temporalidad</label>
+              <select id="temporalidadDiscapacidad"><option value="N/A">N/A</option><option value="Permanente">Permanente</option><option value="Temporal">Temporal (En rehabilitación)</option></select>
+            </div>
+            <div class="form-group"><label>Ayudas Técnicas (Dispositivos)</label>
+              <select id="ayudasTecnicas"><option value="Ninguna">Ninguna</option><option value="Silla de ruedas">Silla de ruedas</option><option value="Aparatos auditivos">Aparatos auditivos / Implante</option><option value="Lentes adaptados">Lentes adaptados / Bastón ciego</option><option value="Prótesis/Órtesis">Prótesis / Órtesis</option></select>
+            </div>
+            <div class="form-group form-full"><label>Diagnóstico Específico</label><input id="diagnosticoDiscapacidad" type="text" maxlength="255" placeholder="Ej. Parálisis cerebral espástica..."/></div>
+          </div>
+
+          <div class="form-grid sub-block">
+            <div class="form-group"><label>¿Habla alguna lengua indígena?</label>
+              <select id="habla_lengua_indigena" onchange="toggleLenguas()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>¿Habla Español?</label>
+              <select id="habla_espanol"><option value="true">Sí</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>¿Requiere Traductor?</label>
+              <select id="requiere_traductor"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>¿Pertenece a Comunidad Indígena?</label>
+              <select id="pertenece_indigena" onchange="toggleComunidad()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group form-full" id="caja_lenguas" style="display:none;">
+              <label>Lenguas Indígenas (Catálogo INALI - Variantes)</label>
+              <select id="ids_variantes_lengua" multiple size="5"><option value="">Cargando catálogo INALI...</option></select>
+              <small class="hint">Mantenga presionado CTRL para seleccionar varios idiomas</small>
+            </div>
+            <div class="form-group" id="caja_comunidad" style="display:none;">
+              <label>Nombre de Comunidad Indígena</label><input id="comunidad_indigena" type="text" maxlength="100"/>
+            </div>
           </div>
         </div>
 
         <div class="form-section">
           <div class="form-section-title">Domicilio (Conectado a SEPOMEX)</div>
           <div class="form-grid">
+            <div class="form-group"><label>Código Postal *</label><input id="cp" type="text" maxlength="5" placeholder="Ingrese 5 dígitos..."/><small class="hint">Se llenará Entidad y Municipio automáticamente</small></div>
             <div class="form-group form-full"><label>Calle</label><input id="calle" type="text" maxlength="150"/></div>
             <div class="form-group"><label>Número Exterior</label><input id="num_ext" type="text" maxlength="20"/></div>
             <div class="form-group"><label>Número Interior</label><input id="num_int" type="text" maxlength="20"/></div>
-            
-            <div class="form-group">
-              <label>Código Postal *</label>
-              <input id="cp" type="text" maxlength="5" placeholder="Ingrese 5 dígitos..."/>
-              <small style="color:var(--text-3); font-size:0.75rem; margin-top:4px;">Se llenará Entidad y Municipio auto.</small>
-            </div>
-            <div class="form-group">
-              <label>Colonia / Asentamiento *</label>
-              <select id="id_colonia">
-                <option value="">Primero ingrese un CP...</option>
-              </select>
-            </div>
-            
+            <div class="form-group"><label>Colonia / Asentamiento *</label><select id="id_colonia"><option value="">Primero ingrese un CP...</option></select></div>
             <div class="form-group"><label>Delegación / Municipio</label><input id="municipio" type="text" readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
             <div class="form-group"><label>Entidad Federativa</label><input id="entidad" type="text" readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
-            
             <div class="form-group"><label>Localidad</label><input id="localidad" type="text" maxlength="100"/></div>
             <div class="form-group"><label>Teléfono de Domicilio</label><input id="telefono" type="text" maxlength="10" placeholder="10 dígitos"/></div>
           </div>
         </div>
 
         <div class="form-section">
-          <div class="form-section-title">II. Tipo de Víctima</div>
-          <div class="form-grid">
-            <div class="form-group"><label>Tipo</label>
-              <select id="tipo_victima" onchange="toggleVictima()">
-                <option value="">Seleccionar</option>
-                <option value="directa">Directa</option>
-                <option value="indirecta">Indirecta</option>
-                <option value="ofendido">Ofendido</option>
-              </select>
-            </div>
-            <div class="form-group" id="victima-directa-wrap" style="display:none;">
-              <label>Nombre de la Víctima Directa</label><input id="nombre_victima_directa" type="text" maxlength="100"/>
-            </div>
-            <div class="form-group" id="relacion-wrap" style="display:none;">
-              <label>Relación con la víctima</label><input id="relacion_victima" type="text" placeholder="Ej: hijo/a, hermano/a" maxlength="50"/>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <div class="form-section-title">V. Lugar y Relato de los Hechos</div>
+          <div class="form-section-title">II. Lugar y Relato de los Hechos</div>
           <div class="form-grid">
             <div class="form-group"><label>Calle</label><input id="h_calle" type="text" maxlength="150"/></div>
             <div class="form-group"><label>Colonia</label><input id="h_colonia" type="text" maxlength="100"/></div>
@@ -124,17 +141,7 @@
         </div>
 
         <div class="form-section">
-          <div class="form-section-title">VI. Tipo de Daño Sufrido</div>
-          <div style="display:flex;gap:1.5rem;flex-wrap:wrap;">
-            <label class="checkbox-group"><input type="checkbox" id="dano_fisico"/> Físico</label>
-            <label class="checkbox-group"><input type="checkbox" id="dano_psicologico"/> Psicológico</label>
-            <label class="checkbox-group"><input type="checkbox" id="dano_patrimonial"/> Patrimonial</label>
-            <label class="checkbox-group"><input type="checkbox" id="dano_sexual"/> Sexual</label>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <div class="form-section-title">VII. Investigación Ministerial</div>
+          <div class="form-section-title">III. Investigación Ministerial</div>
           <div class="form-grid">
             <div class="form-group"><label>¿Denunció ante el MP?</label>
               <select id="denuncio_mp"><option value="false">No</option><option value="true">Sí</option></select>
@@ -152,151 +159,104 @@
         </div>
 
         <div class="form-section">
-          <div class="form-section-title">VIII. Información Complementaria y Red de Apoyo</div>
+          <div class="form-section-title">IV. Víctima</div>
           <div class="form-grid">
-            <div class="form-group"><label>Nombre del Tutor/a</label><input id="nombre_tutor" type="text" maxlength="100"/></div>
-            <div class="form-group"><label>Parentesco del Tutor/a</label>
-              <select id="id_parentesco"><option value="">Cargando catálogo...</option></select>
+            <div class="form-group"><label>Tipo</label>
+              <select id="tipo_victima" onchange="toggleVictima()"><option value="">Seleccionar</option><option value="directa">Directa</option><option value="indirecta">Indirecta</option><option value="ofendido">Ofendido</option></select>
+              <small class="hint"><strong>Directa:</strong> quien sufrió el daño. <strong>Indirecta:</strong> familiares o personas a cargo. <strong>Ofendido:</strong> titular del bien jurídico afectado.</small>
             </div>
+            <div class="form-group" id="victima-directa-wrap" style="display:none;"><label>Nombre de la Víctima Directa</label><input id="nombre_victima_directa" type="text" maxlength="100"/></div>
+            <div class="form-group" id="relacion-wrap" style="display:none;"><label>Relación con la víctima</label><input id="relacion_victima" type="text" placeholder="Ej: hijo/a, hermano/a" maxlength="50"/></div>
+            <div class="form-group"><label>Tipo de Violencia</label>
+              <select id="tipo_violencia"><option value="">Seleccionar</option><option value="psicologica">Psicológica</option><option value="fisica">Física</option><option value="economica">Económica</option><option value="sexual">Sexual</option><option value="feminicida">Feminicida</option><option value="otro">Otro</option></select>
+            </div>
+          </div>
+          <div class="form-group form-full sub-block">
+            <label>Tipo de Daño Sufrido</label>
+            <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:0.5rem;">
+              <label class="checkbox-group"><input type="checkbox" id="dano_fisico"/> Físico</label>
+              <label class="checkbox-group"><input type="checkbox" id="dano_psicologico"/> Psicológico</label>
+              <label class="checkbox-group"><input type="checkbox" id="dano_patrimonial"/> Patrimonial</label>
+              <label class="checkbox-group"><input type="checkbox" id="dano_sexual"/> Sexual</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">V. Información del Tutor</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Nombre(s) del Tutor/a</label><input id="nombre_tutor" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Primer Apellido del Tutor/a</label><input id="primer_apellido_tutor" type="text" maxlength="60"/></div>
+            <div class="form-group"><label>Segundo Apellido del Tutor/a</label><input id="segundo_apellido_tutor" type="text" maxlength="60"/></div>
+            <div class="form-group"><label>Edad del Tutor/a</label><input id="edad_tutor" type="number" min="0" max="120"/></div>
+            <div class="form-group"><label>Parentesco del Tutor/a</label><select id="id_parentesco"><option value="">Cargando catálogo...</option></select></div>
             <div class="form-group"><label>Teléfono del Tutor/a</label><input id="telefono_tutor" type="text" maxlength="10" placeholder="10 dígitos"/></div>
             <div class="form-group"><label>Correo del Tutor/a</label><input id="correo_tutor" type="email" maxlength="100" placeholder="ejemplo@correo.com"/></div>
-            
-            <div class="form-group form-full">
-              <label>Enfermedades del Tutor (Catálogo CIE-11 OMS)</label>
-              <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
-                <select id="select_enf_tutor" style="flex:1;">
-                  <option value="">Cargando catálogo...</option>
-                </select>
-                <label style="display:flex; align-items:center; gap:0.5rem; background: var(--bg-deep); padding: 0 1rem; border-radius: 8px;">
-                  ¿Controlada? 
-                  <select id="ctrl_tutor" style="padding: 0.2rem; border-radius: 4px; background: var(--input-bg); color: white; border: 1px solid var(--border);">
-                    <option value="true">Sí</option>
-                    <option value="false">No</option>
-                  </select>
-                </label>
-                <button type="button" class="btn btn-secondary" onclick="addEnfTutor()" style="width:auto; margin:0; padding:0 1rem;">+ Agregar</button>
-              </div>
-              <div id="lista_enf_tutor" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
-            </div>
-            
-            <div class="form-group form-full" style="border-top: 1px dashed var(--border); padding-top:1rem; margin-top:1rem;">
-              <label>Enfermedades del NNA (Catálogo CIE-11 OMS)</label>
-              <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem;">
-                <select id="select_enf_nna" style="flex:1;">
-                  <option value="">Cargando catálogo...</option>
-                </select>
-                <label style="display:flex; align-items:center; gap:0.5rem; background: var(--bg-deep); padding: 0 1rem; border-radius: 8px;">
-                  ¿Controlada? 
-                  <select id="ctrl_nna" style="padding: 0.2rem; border-radius: 4px; background: var(--input-bg); color: white; border: 1px solid var(--border);">
-                    <option value="true">Sí</option>
-                    <option value="false">No</option>
-                  </select>
-                </label>
-                <button type="button" class="btn btn-secondary" onclick="addEnfNNA()" style="width:auto; margin:0; padding:0 1rem;">+ Agregar</button>
-              </div>
-              <div id="lista_enf_nna" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
-            </div>
+          </div>
 
-            <div class="form-group"><label>Tipo de Violencia</label>
-              <select id="tipo_violencia">
-                <option value="">Seleccionar</option>
-                <option value="psicologica">Psicológica</option>
-                <option value="fisica">Física</option>
-                <option value="economica">Económica</option>
-                <option value="sexual">Sexual</option>
-                <option value="feminicida">Feminicida</option>
-                <option value="otro">Otro</option>
-              </select>
+          <div class="form-group form-full sub-block">
+            <label>Enfermedades del Tutor (Catálogo CIE-11 OMS)</label>
+            <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem; flex-wrap:wrap;">
+              <select id="select_enf_tutor" style="flex:1; min-width:200px;"><option value="">Cargando catálogo...</option></select>
+              <label style="display:flex; align-items:center; gap:0.5rem; background: var(--bg-deep); padding: 0 1rem; border-radius: 8px;">¿Controlada?
+                <select id="ctrl_tutor" style="padding:0.2rem; border-radius:4px; background:var(--input-bg); color:#1A1A1A; border:1px solid var(--border);"><option value="true">Sí</option><option value="false">No</option></select>
+              </label>
+              <button type="button" class="btn btn-secondary" onclick="addEnfTutor()" style="width:auto; margin:0; padding:0 1rem;">+ Agregar</button>
             </div>
-            
+            <div id="lista_enf_tutor" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+          </div>
+
+          <div class="form-grid sub-block">
             <div class="form-group"><label>¿Tiene Discapacidad?</label>
-              <select id="tiene_discapacidad"><option value="false">No</option><option value="true">Sí</option></select>
+              <select id="t_tiene_discapacidad" onchange="toggleDiscapacidadTutor()"><option value="false">No</option><option value="true">Sí</option></select>
             </div>
+          </div>
+          <div class="form-grid" id="caja_discapacidad_tutor" style="display:none;">
             <div class="form-group"><label>Tipo de Discapacidad</label>
-              <select id="tipo_discapacidad">
-                <option value="">N/A</option>
-                <option value="Física">Física</option><option value="Mental">Mental</option><option value="Intelectual">Intelectual</option>
-                <option value="Visual">Visual</option><option value="Auditiva">Auditiva</option><option value="Múltiple">Múltiple</option>
-              </select>
+              <select id="t_tipo_discapacidad"><option value="">N/A</option><option value="Física">Física</option><option value="Sensorial">Sensorial</option><option value="Intelectual/Cognitiva">Intelectual/Cognitiva</option><option value="Psicosocial">Psicosocial</option><option value="Múltiple">Múltiple</option></select>
             </div>
             <div class="form-group"><label>Grado de Dependencia</label>
-              <select id="grado_dependencia">
-                <option value="">N/A</option>
-                <option value="Independiente">Independiente</option><option value="Leve">Leve</option>
-                <option value="Moderada">Moderada</option><option value="Severa">Severa / Total</option>
-              </select>
+              <select id="t_grado_dependencia"><option value="">N/A</option><option value="Moderada">Moderada</option><option value="Severa">Severa</option><option value="Gran dependencia">Gran dependencia</option></select>
             </div>
-            
             <div class="form-group"><label>Origen de la Discapacidad</label>
-              <select id="origenDiscapacidad">
-                <option value="N/A">N/A</option>
-                <option value="Congénita">Congénita / De nacimiento</option>
-                <option value="Adquirida por enfermedad">Adquirida por enfermedad</option>
-                <option value="Accidente">Por accidente</option>
-                <option value="Violencia">Relacionada a violencia</option>
-              </select>
+              <select id="t_origen"><option value="N/A">N/A</option><option value="Congénita">Congénita / De nacimiento</option><option value="Adquirida por enfermedad">Adquirida por enfermedad</option><option value="Accidente">Por accidente</option><option value="Violencia">Relacionada a violencia</option></select>
             </div>
             <div class="form-group"><label>Temporalidad</label>
-              <select id="temporalidadDiscapacidad">
-                <option value="N/A">N/A</option>
-                <option value="Permanente">Permanente</option>
-                <option value="Temporal">Temporal (En rehabilitación)</option>
-              </select>
+              <select id="t_temporalidad"><option value="N/A">N/A</option><option value="Permanente">Permanente</option><option value="Temporal">Temporal (En rehabilitación)</option></select>
             </div>
             <div class="form-group"><label>Ayudas Técnicas (Dispositivos)</label>
-              <select id="ayudasTecnicas">
-                <option value="Ninguna">Ninguna</option>
-                <option value="Silla de ruedas">Silla de ruedas</option>
-                <option value="Aparatos auditivos">Aparatos auditivos / Implante</option>
-                <option value="Lentes adaptados">Lentes adaptados / Bastón ciego</option>
-                <option value="Prótesis/Órtesis">Prótesis / Órtesis</option>
-              </select>
+              <select id="t_ayudas"><option value="Ninguna">Ninguna</option><option value="Silla de ruedas">Silla de ruedas</option><option value="Aparatos auditivos">Aparatos auditivos / Implante</option><option value="Lentes adaptados">Lentes adaptados / Bastón ciego</option><option value="Prótesis/Órtesis">Prótesis / Órtesis</option></select>
             </div>
-            <div class="form-group"><label>Diagnóstico Específico</label>
-              <input id="diagnosticoDiscapacidad" type="text" maxlength="255" placeholder="Ej. Parálisis cerebral espástica..."/>
+            <div class="form-group form-full"><label>Diagnóstico Específico</label><input id="t_diagnostico" type="text" maxlength="255"/></div>
+          </div>
+
+          <div class="form-grid sub-block">
+            <div class="form-group"><label>¿Habla alguna lengua indígena?</label>
+              <select id="t_habla_lengua_indigena" onchange="toggleLenguasTutor()"><option value="false">No</option><option value="true">Sí</option></select>
             </div>
-            
-            <div class="form-group form-full" style="border-top: 1px dashed var(--border); padding-top:1.5rem; margin-top:1rem;">
-              <label style="text-transform: uppercase;">Lenguas Indígenas (Catálogo INALI - Variantes)</label>
-              <select id="ids_variantes_lengua" multiple size="5" style="width: 100%; border-radius: 4px; background: var(--input-bg); color: white; border: 1px solid var(--border); padding: 0.5rem; margin-bottom: 0.2rem;">
-                <option value="">Cargando catálogo INALI...</option>
-              </select>
-              <small style="color:var(--text-3); font-size:0.75rem; display: block; margin-bottom: 1.5rem; text-transform: uppercase;">Mantenga presionado CTRL para seleccionar varios idiomas</small>
+            <div class="form-group"><label>¿Habla Español?</label>
+              <select id="t_habla_espanol"><option value="true">Sí</option><option value="false">No</option></select>
             </div>
-            
-            <div class="form-group form-full">
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
-                <div>
-                  <label style="text-transform: uppercase; margin-bottom: 0.5rem; display: block;">¿Habla Español?</label>
-                  <select id="habla_espanol" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--input-bg); color: white; border: 1px solid var(--border);">
-                    <option value="true">Sí</option>
-                    <option value="false">No</option>
-                  </select>
-                </div>
-                <div>
-                  <label style="text-transform: uppercase; margin-bottom: 0.5rem; display: block;">¿Requiere Traductor?</label>
-                  <select id="requiere_traductor" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--input-bg); color: white; border: 1px solid var(--border);">
-                    <option value="false">No</option>
-                    <option value="true">Sí</option>
-                  </select>
-                </div>
-                <div>
-                  <label style="text-transform: uppercase; margin-bottom: 0.5rem; display: block;">¿Pertenece a Comunidad Indígena?</label>
-                  <select id="pertenece_indigena" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--input-bg); color: white; border: 1px solid var(--border);">
-                    <option value="false">No</option>
-                    <option value="true">Sí</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div style="width: 32%;">
-                <label style="text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Nombre de Comunidad Indígena</label>
-                <input id="comunidad_indigena" type="text" maxlength="100" style="width: 100%; padding: 0.5rem; border-radius: 4px; background: var(--input-bg); color: white; border: 1px solid var(--border);" />
-              </div>
+            <div class="form-group"><label>¿Requiere Traductor?</label>
+              <select id="t_requiere_traductor"><option value="false">No</option><option value="true">Sí</option></select>
             </div>
-            <!-- FIN SECCIÓN DE LENGUAS -->
-            
-            <div class="form-group form-full" style="border-top: 1px dashed var(--border); padding-top:1rem; margin-top:1rem;"></div>
+            <div class="form-group"><label>¿Pertenece a Comunidad Indígena?</label>
+              <select id="t_pertenece_indigena" onchange="toggleComunidadTutor()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group form-full" id="caja_lenguas_tutor" style="display:none;">
+              <label>Lenguas Indígenas del Tutor (Catálogo INALI - Variantes)</label>
+              <select id="ids_variantes_lengua_tutor" multiple size="5"><option value="">Cargando catálogo INALI...</option></select>
+              <small class="hint">Mantenga presionado CTRL para seleccionar varios idiomas</small>
+            </div>
+            <div class="form-group" id="caja_comunidad_tutor" style="display:none;">
+              <label>Nombre de Comunidad Indígena</label><input id="t_comunidad_indigena" type="text" maxlength="100"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Datos de Contacto</div>
+          <div class="form-grid">
             <div class="form-group"><label>Contacto de Emergencia 1</label><input id="contacto_emergencia_1" type="text" maxlength="100" placeholder="Nombre completo"/></div>
             <div class="form-group"><label>Teléfono Emergencia 1</label><input id="telefono_emergencia_1" type="text" maxlength="10" placeholder="10 dígitos"/></div>
             <div class="form-group"><label>Contacto de Emergencia 2</label><input id="contacto_emergencia_2" type="text" maxlength="100" placeholder="Nombre completo"/></div>
@@ -308,7 +268,7 @@
           <div class="form-section-title">IX. Datos del Solicitante</div>
           <div class="form-grid">
             <div class="form-group"><label>Tipo de Solicitante</label>
-              <select id="tipo_solicitante"><option value="">Seleccionar</option><option value="victima">Víctima</option><option value="familiar">Familiar</option><option value="servidor_publico">Servidor Público</option><option value="representante">Representante Legal</option></select>
+              <select id="tipo_solicitante"><option value="">Seleccionar</option><option value="victima">Víctima u ofendido</option><option value="familiar">Familiar o persona de confianza</option><option value="servidor_publico">Servidor/a público/a o autoridad</option><option value="representante">Representante legal</option></select>
             </div>
             <div class="form-group"><label>Nombre del Solicitante</label><input id="nombre_solicitante" type="text" maxlength="100"/></div>
             <div class="form-group"><label>Parentesco / Relación</label><input id="parentesco_solicitante" type="text" maxlength="50"/></div>
@@ -330,19 +290,13 @@
 
   document.getElementById('fecha_nac').addEventListener('change', function() {
     const fecha = this.value;
-    if (!fecha) {
-      document.getElementById('edad').value = '';
-      return;
-    }
+    if (!fecha) { document.getElementById('edad').value = ''; return; }
     const nacimiento = new Date(fecha);
     const hoy = new Date();
-    let edadCalculada = hoy.getFullYear() - nacimiento.getFullYear();
+    let e = hoy.getFullYear() - nacimiento.getFullYear();
     const mes = hoy.getMonth() - nacimiento.getMonth();
-    
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-      edadCalculada--;
-    }
-    document.getElementById('edad').value = edadCalculada;
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) e--;
+    document.getElementById('edad').value = e;
   });
 
   window.addEventListener('DOMContentLoaded', async () => {
@@ -354,32 +308,32 @@
         selectPar.innerHTML = '<option value="">Seleccione el parentesco...</option>';
         parentescos.forEach(p => selectPar.innerHTML += `<option value="${p.id}">${p.nombre}</option>`);
       }
-
       const resEnf = await fetch(`${API}/api/enfermedades`, { headers: authHeaders() });
       if(resEnf.ok) {
         const enfermedades = await resEnf.json();
         const selectEnfNNA = document.getElementById('select_enf_nna');
         const selectEnfTutor = document.getElementById('select_enf_tutor');
-        selectEnfNNA.innerHTML = '<option value="">Seleccione una enfermedad...</option>'; 
+        selectEnfNNA.innerHTML = '<option value="">Seleccione una enfermedad...</option>';
         selectEnfTutor.innerHTML = '<option value="">Seleccione una enfermedad...</option>';
         enfermedades.forEach(e => {
-          const textoEnfermedad = e.codigo_oms ? `${e.codigo_oms} - ${e.nombre}` : e.nombre;
-          selectEnfNNA.innerHTML += `<option value="${e.id}">${textoEnfermedad}</option>`;
-          selectEnfTutor.innerHTML += `<option value="${e.id}">${textoEnfermedad}</option>`;
+          const txt = e.codigo_oms ? `${e.codigo_oms} - ${e.nombre}` : e.nombre;
+          selectEnfNNA.innerHTML += `<option value="${e.id}">${txt}</option>`;
+          selectEnfTutor.innerHTML += `<option value="${e.id}">${txt}</option>`;
         });
       }
-
       const resLen = await fetch(`${API}/api/lenguas`, { headers: authHeaders() });
       if(resLen.ok) {
         const lenguas = await resLen.json();
         const selectLen = document.getElementById('ids_variantes_lengua');
+        const selectLenT = document.getElementById('ids_variantes_lengua_tutor');
         selectLen.innerHTML = '';
+        selectLenT.innerHTML = '';
         lenguas.forEach(l => {
           selectLen.innerHTML += `<option value="${l.id}">${l.nombre}</option>`;
+          selectLenT.innerHTML += `<option value="${l.id}">${l.nombre}</option>`;
         });
       }
     } catch (error) {
-      console.error("Error cargando los catálogos", error);
       showAlert("Error al conectar con la base de datos de catálogos.", "error");
     }
   });
@@ -393,30 +347,53 @@
           const data = await res.json();
           document.getElementById('entidad').value = data.entidad;
           document.getElementById('municipio').value = data.municipio;
-          
           const selectColonia = document.getElementById('id_colonia');
           selectColonia.innerHTML = '<option value="">Seleccione su colonia...</option>';
-          data.colonias.forEach(col => {
-            selectColonia.innerHTML += `<option value="${col.id}">${col.nombre}</option>`;
-          });
+          data.colonias.forEach(col => { selectColonia.innerHTML += `<option value="${col.id}">${col.nombre}</option>`; });
         } else {
           showAlert('Código Postal no encontrado en el catálogo de SEPOMEX.', 'error');
           document.getElementById('entidad').value = '';
           document.getElementById('municipio').value = '';
           document.getElementById('id_colonia').innerHTML = '<option value="">CP Inválido</option>';
         }
-      } catch(e) {
-        console.error(e);
-      }
+      } catch(e) {}
     }
   });
 
+  function toggleDiscapacidad() {
+    const tiene = document.getElementById('tiene_discapacidad').value === 'true';
+    document.getElementById('caja_discapacidad').style.display = tiene ? 'grid' : 'none';
+  }
+  function toggleDiscapacidadTutor() {
+    const tiene = document.getElementById('t_tiene_discapacidad').value === 'true';
+    document.getElementById('caja_discapacidad_tutor').style.display = tiene ? 'grid' : 'none';
+  }
+  function toggleLenguasTutor() {
+    const habla = document.getElementById('t_habla_lengua_indigena').value === 'true';
+    document.getElementById('caja_lenguas_tutor').style.display = habla ? 'block' : 'none';
+    if (!habla) { const sel = document.getElementById('ids_variantes_lengua_tutor'); for (const op of sel.options) op.selected = false; }
+  }
+  function toggleComunidadTutor() {
+    const pertenece = document.getElementById('t_pertenece_indigena').value === 'true';
+    document.getElementById('caja_comunidad_tutor').style.display = pertenece ? 'block' : 'none';
+    if (!pertenece) document.getElementById('t_comunidad_indigena').value = '';
+  }
 
   function toggleVictima() {
-  
     const tipo = document.getElementById('tipo_victima').value;
-    document.getElementById('victima-directa-wrap').style.display = tipo === 'indirecta' || tipo === 'ofendido' ? 'block' : 'none';
-    document.getElementById('relacion-wrap').style.display = tipo === 'indirecta' || tipo === 'ofendido' ? 'block' : 'none';
+    const mostrar = tipo === 'indirecta' || tipo === 'ofendido' ? 'block' : 'none';
+    document.getElementById('victima-directa-wrap').style.display = mostrar;
+    document.getElementById('relacion-wrap').style.display = mostrar;
+  }
+  function toggleLenguas() {
+    const habla = document.getElementById('habla_lengua_indigena').value === 'true';
+    document.getElementById('caja_lenguas').style.display = habla ? 'block' : 'none';
+    if (!habla) { const sel = document.getElementById('ids_variantes_lengua'); for (const op of sel.options) op.selected = false; }
+  }
+  function toggleComunidad() {
+    const pertenece = document.getElementById('pertenece_indigena').value === 'true';
+    document.getElementById('caja_comunidad').style.display = pertenece ? 'block' : 'none';
+    if (!pertenece) document.getElementById('comunidad_indigena').value = '';
   }
 
   let enfTutorArr = [];
@@ -426,63 +403,40 @@
     const sel = document.getElementById('select_enf_tutor');
     const idEnf = parseInt(sel.value);
     if(!idEnf) return showAlert('Selecciona una enfermedad primero.', 'error');
-    
     const nombre = sel.options[sel.selectedIndex].text;
     const controlada = document.getElementById('ctrl_tutor').value === 'true';
-    
     if(enfTutorArr.find(e => e.id_enfermedad === idEnf)) return showAlert('La enfermedad ya está en la lista', 'error');
-    
     enfTutorArr.push({ id_enfermedad: idEnf, nombre: nombre, esta_controlada: controlada });
     renderEnfTutor();
   }
-
-  function removeEnfTutor(id) {
-    enfTutorArr = enfTutorArr.filter(e => e.id_enfermedad !== id);
-    renderEnfTutor();
-  }
-
+  function removeEnfTutor(id) { enfTutorArr = enfTutorArr.filter(e => e.id_enfermedad !== id); renderEnfTutor(); }
   function renderEnfTutor() {
     document.getElementById('lista_enf_tutor').innerHTML = enfTutorArr.map(e => `
       <div style="display:flex; justify-content:space-between; background:var(--input-bg); padding:0.5rem 1rem; border-radius:5px; border:1px solid var(--border);">
         <span>${e.nombre} <strong style="color:${e.esta_controlada ? 'var(--green)' : 'var(--rose)'}">(${e.esta_controlada ? 'Controlada' : 'No controlada'})</strong></span>
-        <button type="button" onclick="removeEnfTutor(${e.id_enfermedad})" style="background:transparent; border:none; color:var(--rose); cursor:pointer;"> Quitar</button>
-      </div>
-    `).join('');
+        <button type="button" onclick="removeEnfTutor(${e.id_enfermedad})" style="background:transparent; border:none; color:var(--rose); cursor:pointer;">Quitar</button>
+      </div>`).join('');
   }
-
   function addEnfNNA() {
     const sel = document.getElementById('select_enf_nna');
     const idEnf = parseInt(sel.value);
     if(!idEnf) return showAlert('Selecciona una enfermedad primero.', 'error');
-    
     const nombre = sel.options[sel.selectedIndex].text;
     const controlada = document.getElementById('ctrl_nna').value === 'true';
-    
     if(enfNNAArr.find(e => e.id_enfermedad === idEnf)) return showAlert('La enfermedad ya está en la lista', 'error');
-    
     enfNNAArr.push({ id_enfermedad: idEnf, nombre: nombre, esta_controlada: controlada });
     renderEnfNNA();
   }
-
-  function removeEnfNNA(id) {
-    enfNNAArr = enfNNAArr.filter(e => e.id_enfermedad !== id);
-    renderEnfNNA();
-  }
-
+  function removeEnfNNA(id) { enfNNAArr = enfNNAArr.filter(e => e.id_enfermedad !== id); renderEnfNNA(); }
   function renderEnfNNA() {
     document.getElementById('lista_enf_nna').innerHTML = enfNNAArr.map(e => `
       <div style="display:flex; justify-content:space-between; background:var(--input-bg); padding:0.5rem 1rem; border-radius:5px; border:1px solid var(--border);">
         <span>${e.nombre} <strong style="color:${e.esta_controlada ? 'var(--green)' : 'var(--rose)'}">(${e.esta_controlada ? 'Controlada' : 'No controlada'})</strong></span>
-        <button type="button" onclick="removeEnfNNA(${e.id_enfermedad})" style="background:transparent; border:none; color:var(--rose); cursor:pointer;">❌ Quitar</button>
-      </div>
-    `).join('');
+        <button type="button" onclick="removeEnfNNA(${e.id_enfermedad})" style="background:transparent; border:none; color:var(--rose); cursor:pointer;">Quitar</button>
+      </div>`).join('');
   }
 
-  function limpiarTexto(texto) {
-    if (!texto) return texto;
-    return texto.toString().trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
+  function limpiarTexto(texto) { if (!texto) return texto; return texto.toString().trim().replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   function g(id) { return document.getElementById(id)?.value.trim() || null; }
   function gb(id) { return document.getElementById(id)?.checked || false; }
 
@@ -491,55 +445,55 @@
     const coloniaTexto = colSelect.options[colSelect.selectedIndex]?.text || '';
 
     const body = {
-      nombre: limpiarTexto(g('nombre')), 
-      primer_apellido: limpiarTexto(g('p_apellido')), 
+      nombre: limpiarTexto(g('nombre')),
+      primer_apellido: limpiarTexto(g('p_apellido')),
       segundo_apellido: limpiarTexto(g('s_apellido')),
-      fecha_nacimiento: g('fecha_nac'), 
-      edad: parseInt(g('edad')) || null,
-      sexo: g('sexo'), 
-      nacionalidad: limpiarTexto(g('nacionalidad')),
-      curp: limpiarTexto(g('curp')), 
-      rfc: null, 
+      fecha_nacimiento: g('fecha_nac'),
+      edad: parseInt(g('edad')),
+      sexo: g('sexo'),
+      curp: limpiarTexto(g('curp')),
       estado_civil: g('estado_civil'),
-      lugar_nac_pais: limpiarTexto(g('nac_pais')), 
+      nacionalidad: limpiarTexto(g('nacionalidad')),
+      lugar_nac_pais: limpiarTexto(g('nac_pais')),
       lugar_nac_entidad: limpiarTexto(g('nac_entidad')),
-      lugar_nac_municipio: limpiarTexto(g('nac_municipio')), 
+      lugar_nac_municipio: limpiarTexto(g('nac_municipio')),
       lugar_nac_comunidad: limpiarTexto(g('nac_comunidad')),
-      
-      calle: limpiarTexto(g('calle')), 
-      numero_exterior: limpiarTexto(g('num_ext')), 
+      codigo_postal: g('cp'),
+      calle: limpiarTexto(g('calle')),
+      numero_exterior: limpiarTexto(g('num_ext')),
       numero_interior: limpiarTexto(g('num_int')),
-      codigo_postal: limpiarTexto(g('cp')), 
-      colonia: coloniaTexto !== 'Primero ingrese un CP...' && coloniaTexto !== 'CP Inválido' ? limpiarTexto(coloniaTexto) : null, 
-      delegacion_municipio: limpiarTexto(g('municipio')), 
-      entidad_federativa: limpiarTexto(g('entidad')), 
+      colonia: limpiarTexto(coloniaTexto),
+      id_colonia: parseInt(g('id_colonia')) || null,
       localidad: limpiarTexto(g('localidad')),
       telefono: limpiarTexto(g('telefono')),
-
-      tipo_victima: g('tipo_victima'), 
-      nombre_victima_directa: limpiarTexto(g('nombre_victima_directa')), 
+      tipo_victima: g('tipo_victima'),
+      nombre_victima_directa: limpiarTexto(g('nombre_victima_directa')),
       relacion_victima: limpiarTexto(g('relacion_victima')),
-      lugar_hechos_calle: limpiarTexto(g('h_calle')), 
+      lugar_hechos_calle: limpiarTexto(g('h_calle')),
       lugar_hechos_colonia: limpiarTexto(g('h_colonia')),
-      lugar_hechos_municipio: limpiarTexto(g('h_municipio')), 
+      lugar_hechos_municipio: limpiarTexto(g('h_municipio')),
       lugar_hechos_entidad: limpiarTexto(g('h_entidad')),
-      fecha_hechos: g('fecha_hechos'), 
+      fecha_hechos: g('fecha_hechos'),
       relato_hechos: limpiarTexto(g('relato')),
-      dano_fisico: gb('dano_fisico'), 
+      dano_fisico: gb('dano_fisico'),
       dano_psicologico: gb('dano_psicologico'),
-      dano_patrimonial: gb('dano_patrimonial'), 
+      dano_patrimonial: gb('dano_patrimonial'),
       dano_sexual: gb('dano_sexual'),
-      denuncio_mp: g('denuncio_mp') === 'true', 
+      denuncio_mp: g('denuncio_mp') === 'true',
       fecha_denuncia_mp: g('fecha_denuncia'),
-      competencia_mp: g('competencia_mp'), 
+      competencia_mp: g('competencia_mp'),
       entidad_mp: limpiarTexto(g('entidad_mp')),
-      delito_mp: limpiarTexto(g('delito_mp')), 
+      delito_mp: limpiarTexto(g('delito_mp')),
       agencia_mp: limpiarTexto(g('agencia_mp')),
-      numero_averiguacion: limpiarTexto(g('num_averiguacion')), 
+      numero_averiguacion: limpiarTexto(g('num_averiguacion')),
       estado_investigacion: limpiarTexto(g('estado_investigacion')),
-      nombre_tutor: limpiarTexto(g('nombre_tutor')), 
+      nombre_tutor: limpiarTexto(g('nombre_tutor')),
+      primer_apellido_tutor: limpiarTexto(g('primer_apellido_tutor')),
+      segundo_apellido_tutor: limpiarTexto(g('segundo_apellido_tutor')),
+      edad_tutor: parseInt(g('edad_tutor')) || null,
       telefono_tutor: limpiarTexto(g('telefono_tutor')),
       correo_tutor: limpiarTexto(g('correo_tutor')),
+      id_parentesco: parseInt(g('id_parentesco')) || null,
       contacto_emergencia_1: limpiarTexto(g('contacto_emergencia_1')),
       telefono_emergencia_1: limpiarTexto(g('telefono_emergencia_1')),
       contacto_emergencia_2: limpiarTexto(g('contacto_emergencia_2')),
@@ -548,63 +502,64 @@
       tiene_discapacidad: g('tiene_discapacidad') === 'true',
       tipo_discapacidad: g('tipo_discapacidad'),
       grado_dependencia: g('grado_dependencia'),
-      
       origen_discapacidad: g('origenDiscapacidad'),
       temporalidad: g('temporalidadDiscapacidad'),
       ayudas_tecnicas: g('ayudasTecnicas'),
       diagnostico_especifico: limpiarTexto(g('diagnosticoDiscapacidad')),
-
       habla_espanol: g('habla_espanol') === 'true',
       requiere_traductor: g('requiere_traductor') === 'true',
-      idioma_lengua: null, 
       pertenece_indigena: g('pertenece_indigena') === 'true',
       comunidad_indigena: limpiarTexto(g('comunidad_indigena')),
+      tutor_tiene_discapacidad: g('t_tiene_discapacidad') === 'true',
+      tutor_tipo_discapacidad: g('t_tipo_discapacidad'),
+      tutor_grado_dependencia: g('t_grado_dependencia'),
+      tutor_origen_discapacidad: g('t_origen'),
+      tutor_temporalidad: g('t_temporalidad'),
+      tutor_ayudas_tecnicas: g('t_ayudas'),
+      tutor_diagnostico_especifico: limpiarTexto(g('t_diagnostico')),
+      tutor_habla_espanol: g('t_habla_espanol') === 'true',
+      tutor_requiere_traductor: g('t_requiere_traductor') === 'true',
+      tutor_pertenece_indigena: g('t_pertenece_indigena') === 'true',
+      tutor_habla_lengua_indigena: g('t_habla_lengua_indigena') === 'true',
+      tutor_comunidad_indigena: limpiarTexto(g('t_comunidad_indigena')),
+      ids_variantes_lengua_tutor: Array.from(document.getElementById('ids_variantes_lengua_tutor').selectedOptions).map(opt => parseInt(opt.value)).filter(val => !isNaN(val)),
       tipo_solicitante: g('tipo_solicitante'),
       nombre_solicitante: limpiarTexto(g('nombre_solicitante')),
       parentesco_solicitante: limpiarTexto(g('parentesco_solicitante')),
-
-      id_parentesco: parseInt(g('id_parentesco')) || null,
       enfermedades_nna: enfNNAArr.map(e => ({ id_enfermedad: e.id_enfermedad, esta_controlada: e.esta_controlada })),
       enfermedades_tutor: enfTutorArr.map(e => ({ id_enfermedad: e.id_enfermedad, esta_controlada: e.esta_controlada })),
       ids_variantes_lengua: Array.from(document.getElementById('ids_variantes_lengua').selectedOptions).map(opt => parseInt(opt.value)).filter(val => !isNaN(val))
     };
 
     if (!body.nombre || !body.primer_apellido || !body.curp || !body.fecha_nacimiento || !body.codigo_postal || !body.telefono) {
-      showAlert('¡Alto! Faltan datos obligatorios: Nombre, Apellido, CURP, Fecha de Nacimiento, CP o Teléfono.', 'error'); 
-      return; 
-    }
-    
-    if (body.edad === null || body.edad < 0 || body.edad > 17) {
-      showAlert('La edad de la niña, niño o adolescente debe ser entre 0 y 17 años, y se calcula con su fecha de nacimiento.', 'error');
+      showAlert('¡Alto! Faltan datos obligatorios: Nombre, Apellido, CURP, Fecha de Nacimiento, CP o Teléfono.', 'error');
       return;
     }
-
+    if (body.edad === null || isNaN(body.edad) || body.edad < 0 || body.edad > 17) {
+      showAlert('La edad debe ser entre 0 y 17 años, y se calcula con la fecha de nacimiento.', 'error');
+      return;
+    }
     if (body.curp && body.curp.length !== 18) {
       showAlert('El CURP no es válido. Debe tener exactamente 18 caracteres.', 'error');
       return;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (body.correo_tutor && !emailRegex.test(body.correo_tutor)) {
       showAlert('Ingresa un correo de tutor válido (ejemplo@dominio.com).', 'error');
       return;
     }
-
-    const numRegex = /^\d+$/; 
-    
+    const numRegex = /^\d+$/;
     if (body.codigo_postal && (!numRegex.test(body.codigo_postal) || body.codigo_postal.length !== 5)) {
       showAlert('El Código Postal debe contener exactamente 5 números.', 'error');
       return;
     }
-
-    const telefonosAVerificar = [
+    const tels = [
       { num: body.telefono, nombre: 'Domicilio' },
       { num: body.telefono_tutor, nombre: 'Tutor' },
       { num: body.telefono_emergencia_1, nombre: 'Emergencia 1' },
       { num: body.telefono_emergencia_2, nombre: 'Emergencia 2' }
     ];
-
-    for (let tel of telefonosAVerificar) {
+    for (let tel of tels) {
       if (tel.num && (!numRegex.test(tel.num) || tel.num.length !== 10)) {
         showAlert(`El teléfono de ${tel.nombre} debe tener exactamente 10 números.`, 'error');
         return;
@@ -612,35 +567,19 @@
     }
 
     try {
-      const res = await fetch(`${API}/api/nna`, { 
-        method:'POST', 
-        headers: authHeaders(), 
-        body: JSON.stringify(body) 
-      });
-      
+      const res = await fetch(`${API}/api/nna`, { method:'POST', headers: authHeaders(), body: JSON.stringify(body) });
       const data = await res.json();
-      
-      if (res.ok) { 
-        showAlert('Expediente NNA creado exitosamente', 'success'); 
-        setTimeout(() => location.href='lista-nna.html', 1500); 
-      } else { 
-        let mensajeTecnico = data.detail || 'Error al crear expediente';
-        let mensajeEspanol = mensajeTecnico; 
-
-        if (mensajeTecnico.includes('curp_key') || mensajeTecnico.includes('duplicate key')) {
-            mensajeEspanol = 'Ya existe un NNA registrado con este CURP.';
-        } 
-        else if (mensajeTecnico.includes('value too long')) {
-            mensajeEspanol = 'Error: Uno de los textos que escribiste es demasiado largo para el sistema.';
-        }
-        else if (mensajeTecnico.includes('null value in column')) {
-            mensajeEspanol = 'Error: Faltan datos obligatorios que la base de datos necesita.';
-        }
-        else if (mensajeTecnico.includes('violates check constraint')) {
-             mensajeEspanol = 'Error: Verificaste una edad o formato no permitido (Ej. edad negativa).';
-        }
-
-        showAlert(mensajeEspanol, 'error'); 
+      if (res.ok) {
+        showAlert('Expediente NNA creado exitosamente', 'success');
+        setTimeout(() => location.href='lista-nna.html', 1500);
+      } else {
+        let m = data.detail || 'Error al crear expediente';
+        let msg = m;
+        if (m.includes('curp_key') || m.includes('duplicate key')) msg = 'Ya existe un NNA registrado con este CURP.';
+        else if (m.includes('value too long')) msg = 'Error: Uno de los textos es demasiado largo para el sistema.';
+        else if (m.includes('null value in column')) msg = 'Error: Faltan datos obligatorios que la base de datos necesita.';
+        else if (m.includes('violates check constraint')) msg = 'Error: Verificaste una edad o formato no permitido.';
+        showAlert(msg, 'error');
       }
     } catch (error) {
       showAlert('No se pudo conectar con el servidor. Verifica tu conexión.', 'error');

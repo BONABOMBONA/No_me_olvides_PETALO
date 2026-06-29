@@ -62,30 +62,17 @@
   }
 
   async function cargar() {
-    const nna = await fetch(`${API}/api/nna`, { headers: authHeaders() }).then(r=>r.json()).catch(()=>[]);
-    if (!Array.isArray(nna)) return;
+    const data = await fetch(`${API}/api/estadisticas`, { headers: authHeaders() }).then(r=>r.json()).catch(()=>null);
+    if (!data) return;
 
-    document.getElementById('s-total').textContent = nna.length;
-    document.getElementById('s-sin').textContent = nna.filter(n=>n.estatus==='sin_proceso').length;
-    document.getElementById('s-en').textContent = nna.filter(n=>n.estatus==='en_proceso').length;
-    document.getElementById('s-con').textContent = nna.filter(n=>n.estatus==='concluido').length;
+    document.getElementById('s-total').textContent = data.total;
+    document.getElementById('s-sin').textContent = data.sin_proceso;
+    document.getElementById('s-en').textContent = data.en_proceso;
+    document.getElementById('s-con').textContent = data.concluido;
 
-    const countBy = (key) => {
-      const counts = {};
-      nna.forEach(n => { const v = n[key]||'No especificado'; counts[v] = (counts[v]||0)+1; });
-      return Object.entries(counts).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value);
-    };
-
-    barChart('violencia-chart', countBy('tipo_violencia'));
-    barChart('victima-chart', countBy('tipo_victima'));
-
-    const danos = [
-      { label:'Físico',       value: nna.filter(n=>n.dano_fisico).length },
-      { label:'Psicológico',  value: nna.filter(n=>n.dano_psicologico).length },
-      { label:'Patrimonial',  value: nna.filter(n=>n.dano_patrimonial).length },
-      { label:'Sexual',       value: nna.filter(n=>n.dano_sexual).length },
-    ];
-    barChart('danos-chart', danos);
+    barChart('violencia-chart', data.violencia);
+    barChart('victima-chart', data.victima);
+    barChart('danos-chart', data.danos);
   }
 
   cargar();

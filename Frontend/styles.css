@@ -143,6 +143,7 @@ td[style*="display:flex"] { gap: 12px !important; min-width: 250px; display: fle
 .form-group { display:flex; flex-direction:column; gap:.5rem; margin-bottom: 1rem; }
 label { font-size:.85rem; color:var(--text-3); letter-spacing:.05em; text-transform:uppercase; font-weight: 700; }
 input, select, textarea { width: 100%; padding: .9rem 1.2rem; border-radius: 6px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text-1); outline: none; transition: all .2s; font-size: 1rem; }
+select option, select optgroup { background: #FFFFFF; color: #1A1A1A; }
 input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(160, 126, 89, 0.25); }
 input::placeholder { color: var(--text-3); opacity: 0.5; }
 

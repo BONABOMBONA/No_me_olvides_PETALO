@@ -79,10 +79,12 @@
           <td>${u.rol||'—'}</td>
           <td>${u.tipo||'—'}</td>
           <td><span class="badge ${bEstado[u.estado]||''}">${u.estado}</span></td>
-          <td style="display:flex;gap:.5rem;flex-wrap:wrap;">
-            <button class="btn btn-secondary btn-sm" onclick="location.href='ver-usuario.html?id=${u.id}'">Ver</button>
-            <button class="btn btn-ghost btn-sm" onclick="location.href='editar-usuario.html?id=${u.id}'">Editar</button>
-            <button class="btn ${u.estado === 'restringido' ? 'btn-primary' : 'btn-danger'} btn-sm" onclick="${u.estado === 'restringido' ? `activar(${u.id})` : `restringir(${u.id})`}">${u.estado === 'restringido' ? 'Activar' : 'Restringir'}</button>
+          <td>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+              <button class="btn btn-secondary btn-sm" onclick="location.href='ver-usuario.html?id=${u.id}'">Ver</button>
+              <button class="btn btn-ghost btn-sm" onclick="location.href='editar-usuario.html?id=${u.id}'">Editar</button>
+              <button class="btn ${u.estado === 'restringido' ? 'btn-primary' : 'btn-danger'} btn-sm" onclick="${u.estado === 'restringido' ? `activar(${u.id})` : `restringir(${u.id})`}">${u.estado === 'restringido' ? 'Activar' : 'Restringir'}</button>
+            </div>
           </td>
         </tr>`).join('');
   }

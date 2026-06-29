@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Editar Expediente — No Me Olvides</title>
+  <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css"> 
+  <link rel="stylesheet" href="styles.css">
   <style>
     select[multiple] { height: auto; min-height: 120px; padding: 0.5rem; }
-    select[multiple] option { padding: 0.5rem; border-bottom: 1px solid var(--border); }
+    select[multiple] option { padding: 0.5rem; border-bottom: 1px solid var(--border); background: #FFFFFF; color: #1A1A1A; }
     select[multiple] option:checked { background-color: var(--accent); color: #000; font-weight: bold; }
+    .sub-block { border-top: 1px dashed var(--border); padding-top: 1rem; margin-top: 1rem; }
+    .hint { color: var(--text-3); font-size: 0.78rem; margin-top: 4px; display: block; }
   </style>
 </head>
 <body>
@@ -19,68 +22,262 @@
     <div class="topbar"><span class="topbar-title">NNA</span><span class="topbar-breadcrumb">/ Editar Expediente</span></div>
     <div class="page-body">
       <div class="page-header">
-        <div><div class="page-title">Editar Expediente NNA</div><div class="page-sub" id="expediente-id">Cargando datos</div></div>
+        <div><div class="page-title">Editar Expediente NNA</div><div class="page-sub">Basado en el FUD, LGDNNA, CIE-11 (OMS), INALI y SEPOMEX</div></div>
         <button class="btn btn-ghost" onclick="history.back()">← Volver</button>
       </div>
       <div id="alert"></div>
-      
-      <div class="card" id="form-container" style="opacity: 0.5; pointer-events: none;">
-        
+      <div class="card">
+
         <div class="form-section">
           <div class="form-section-title">I. Datos de la Víctima</div>
           <div class="form-grid">
             <div class="form-group"><label>Nombre(s) *</label><input id="nombre" type="text" maxlength="50"/></div>
             <div class="form-group"><label>Primer Apellido *</label><input id="p_apellido" type="text" maxlength="50"/></div>
             <div class="form-group"><label>Segundo Apellido</label><input id="s_apellido" type="text" maxlength="50"/></div>
-            <div class="form-group"><label>Fecha Nacimiento</label><input id="fecha_nac" type="date"/></div>
-            <div class="form-group"><label>Edad *</label><input id="edad" type="number" min="0" max="99"/></div>
-            <div class="form-group"><label>Sexo</label><select id="sexo"><option value="">Seleccionar</option><option>Hombre</option><option>Mujer</option><option>Otro</option></select></div>
-            <div class="form-group"><label>CURP</label><input id="curp" type="text" maxlength="18"/></div>
-            <div class="form-group"><label>RFC</label><input id="rfc" type="text" maxlength="13"/></div>
+            <div class="form-group"><label>Fecha de Nacimiento *</label><input id="fecha_nac" type="date"/></div>
+            <div class="form-group"><label>Edad *</label><input id="edad" type="number" placeholder="Se calcula auto." readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
+            <div class="form-group"><label>Sexo</label>
+              <select id="sexo"><option value="">Seleccionar</option><option>Hombre</option><option>Mujer</option><option>Otro</option></select>
+            </div>
+            <div class="form-group"><label>CURP</label><input id="curp" type="text" maxlength="18" placeholder="18 caracteres" oninput="this.value = this.value.toUpperCase()"/></div>
+            <div class="form-group"><label>Estado Civil</label>
+              <select id="estado_civil"><option value="">Seleccionar</option><option>Soltero/a</option><option>Casado/a</option><option>Divorciado/a</option><option>Viudo/a</option><option>Unión libre</option></select>
+            </div>
+          </div>
+
+          <div class="form-group form-full sub-block">
+            <label>Enfermedades del NNA (Catálogo CIE-11 OMS)</label>
+            <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem; flex-wrap:wrap;">
+              <select id="select_enf_nna" style="flex:1; min-width:200px;"><option value="">Cargando catálogo...</option></select>
+              <label style="display:flex; align-items:center; gap:0.5rem; background: var(--bg-deep); padding: 0 1rem; border-radius: 8px;">¿Controlada?
+                <select id="ctrl_nna" style="padding:0.2rem; border-radius:4px; background:var(--input-bg); color:#1A1A1A; border:1px solid var(--border);"><option value="true">Sí</option><option value="false">No</option></select>
+              </label>
+              <button type="button" class="btn btn-secondary" onclick="addEnfNNA()" style="width:auto; margin:0; padding:0 1rem;">+ Agregar</button>
+            </div>
+            <div id="lista_enf_nna" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+          </div>
+
+          <div class="form-grid sub-block">
+            <div class="form-group"><label>País de Nacimiento</label><input id="nac_pais" type="text" value="México" maxlength="50"/></div>
+            <div class="form-group"><label>Nacionalidad</label><input id="nacionalidad" type="text" value="Mexicana" maxlength="50"/></div>
+            <div class="form-group"><label>Entidad Federativa de Nacimiento</label><input id="nac_entidad" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Delegación/Municipio de Nacimiento</label><input id="nac_municipio" type="text" maxlength="100"/></div>
+            <input id="nac_comunidad" type="hidden"/>
+          </div>
+
+          <div class="form-grid sub-block">
+            <div class="form-group"><label>¿Tiene Discapacidad?</label>
+              <select id="tiene_discapacidad" onchange="toggleDiscapacidad()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+          </div>
+          <div class="form-grid" id="caja_discapacidad" style="display:none;">
+            <div class="form-group"><label>Tipo de Discapacidad</label>
+              <select id="tipo_discapacidad"><option value="">N/A</option><option value="Física">Física</option><option value="Sensorial">Sensorial</option><option value="Intelectual/Cognitiva">Intelectual/Cognitiva</option><option value="Psicosocial">Psicosocial</option><option value="Múltiple">Múltiple</option></select>
+            </div>
+            <div class="form-group"><label>Grado de Dependencia</label>
+              <select id="grado_dependencia"><option value="">N/A</option><option value="Moderada">Moderada</option><option value="Severa">Severa</option><option value="Gran dependencia">Gran dependencia</option></select>
+            </div>
+            <div class="form-group"><label>Origen de la Discapacidad</label>
+              <select id="origenDiscapacidad"><option value="N/A">N/A</option><option value="Congénita">Congénita / De nacimiento</option><option value="Adquirida por enfermedad">Adquirida por enfermedad</option><option value="Accidente">Por accidente</option><option value="Violencia">Relacionada a violencia</option></select>
+            </div>
+            <div class="form-group"><label>Temporalidad</label>
+              <select id="temporalidadDiscapacidad"><option value="N/A">N/A</option><option value="Permanente">Permanente</option><option value="Temporal">Temporal (En rehabilitación)</option></select>
+            </div>
+            <div class="form-group"><label>Ayudas Técnicas (Dispositivos)</label>
+              <select id="ayudasTecnicas"><option value="Ninguna">Ninguna</option><option value="Silla de ruedas">Silla de ruedas</option><option value="Aparatos auditivos">Aparatos auditivos / Implante</option><option value="Lentes adaptados">Lentes adaptados / Bastón ciego</option><option value="Prótesis/Órtesis">Prótesis / Órtesis</option></select>
+            </div>
+            <div class="form-group form-full"><label>Diagnóstico Específico</label><input id="diagnosticoDiscapacidad" type="text" maxlength="255" placeholder="Ej. Parálisis cerebral espástica..."/></div>
+          </div>
+
+          <div class="form-grid sub-block">
+            <div class="form-group"><label>¿Habla alguna lengua indígena?</label>
+              <select id="habla_lengua_indigena" onchange="toggleLenguas()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>¿Habla Español?</label>
+              <select id="habla_espanol"><option value="true">Sí</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>¿Requiere Traductor?</label>
+              <select id="requiere_traductor"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>¿Pertenece a Comunidad Indígena?</label>
+              <select id="pertenece_indigena" onchange="toggleComunidad()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group form-full" id="caja_lenguas" style="display:none;">
+              <label>Lenguas Indígenas (Catálogo INALI - Variantes)</label>
+              <select id="ids_variantes_lengua" multiple size="5"><option value="">Cargando catálogo INALI...</option></select>
+              <small class="hint">Mantenga presionado CTRL para seleccionar varios idiomas</small>
+            </div>
+            <div class="form-group" id="caja_comunidad" style="display:none;">
+              <label>Nombre de Comunidad Indígena</label><input id="comunidad_indigena" type="text" maxlength="100"/>
+            </div>
           </div>
         </div>
 
         <div class="form-section">
-          <div class="form-section-title">Domicilio (SEPOMEX)</div>
+          <div class="form-section-title">Domicilio (Conectado a SEPOMEX)</div>
           <div class="form-grid">
-            <div class="form-group"><label>Calle</label><input id="calle" type="text" maxlength="150"/></div>
-            <div class="form-group"><label>No. Ext.</label><input id="num_ext" type="text" maxlength="20"/></div>
-            <div class="form-group"><label>Código Postal *</label><input id="cp" type="text" maxlength="5"/></div>
-            <div class="form-group"><label>Colonia *</label><select id="id_colonia"><option value="">Cargando...</option></select></div>
-            <div class="form-group"><label>Municipio</label><input id="municipio" type="text" readonly style="background:var(--bg-deep);"/></div>
-            <div class="form-group"><label>Entidad</label><input id="entidad" type="text" readonly style="background:var(--bg-deep);"/></div>
-            <div class="form-group"><label>Teléfono</label><input id="telefono" type="text" maxlength="10"/></div>
+            <div class="form-group"><label>Código Postal *</label><input id="cp" type="text" maxlength="5" placeholder="Ingrese 5 dígitos..."/><small class="hint">Se llenará Entidad y Municipio automáticamente</small></div>
+            <div class="form-group form-full"><label>Calle</label><input id="calle" type="text" maxlength="150"/></div>
+            <div class="form-group"><label>Número Exterior</label><input id="num_ext" type="text" maxlength="20"/></div>
+            <div class="form-group"><label>Número Interior</label><input id="num_int" type="text" maxlength="20"/></div>
+            <div class="form-group"><label>Colonia / Asentamiento *</label><select id="id_colonia"><option value="">Primero ingrese un CP...</option></select></div>
+            <div class="form-group"><label>Delegación / Municipio</label><input id="municipio" type="text" readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
+            <div class="form-group"><label>Entidad Federativa</label><input id="entidad" type="text" readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
+            <div class="form-group"><label>Localidad</label><input id="localidad" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Teléfono de Domicilio</label><input id="telefono" type="text" maxlength="10" placeholder="10 dígitos"/></div>
           </div>
         </div>
 
         <div class="form-section">
-          <div class="form-section-title">VIII. Información Complementaria y Red de Apoyo</div>
+          <div class="form-section-title">II. Lugar y Relato de los Hechos</div>
           <div class="form-grid">
-            <div class="form-group"><label>Nombre del Tutor/a</label><input id="nombre_tutor" type="text" maxlength="100"/></div>
-            <div class="form-group"><label>Parentesco Tutor/a</label><select id="id_parentesco"><option value="">Cargando...</option></select></div>
-            <div class="form-group"><label>Teléfono Tutor</label><input id="telefono_tutor" type="text" maxlength="10"/></div>
-            <div class="form-group"><label>Correo Tutor</label><input id="correo_tutor" type="email" maxlength="100"/></div>
-            
-            <div class="form-group form-full">
-              <label>Enfermedades del Tutor (CIE-11)</label>
-              <select id="ids_enfermedades_tutor" multiple size="4"></select>
-            </div>
-            
-            <div class="form-group form-full">
-              <label>Enfermedades del NNA (CIE-11)</label>
-              <select id="ids_enfermedades" multiple size="4"></select>
-            </div>
+            <div class="form-group"><label>Calle</label><input id="h_calle" type="text" maxlength="150"/></div>
+            <div class="form-group"><label>Colonia</label><input id="h_colonia" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Delegación / Municipio / Alcaldía</label><input id="h_municipio" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Entidad</label><input id="h_entidad" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Fecha de los Hechos</label><input id="fecha_hechos" type="date"/></div>
+            <div class="form-group form-full"><label>Relato de los Hechos</label><textarea id="relato" rows="6" maxlength="2000" placeholder="Describa las circunstancias antes, durante y después de los hechos... (Máximo 2000 caracteres)"></textarea></div>
+          </div>
+        </div>
 
-            <div class="form-group form-full">
-              <label>Lenguas Indígenas (INALI)</label>
-              <select id="ids_variantes_lengua" multiple size="4"></select>
+        <div class="form-section">
+          <div class="form-section-title">III. Investigación Ministerial</div>
+          <div class="form-grid">
+            <div class="form-group"><label>¿Denunció ante el MP?</label>
+              <select id="denuncio_mp"><option value="false">No</option><option value="true">Sí</option></select>
             </div>
+            <div class="form-group"><label>Fecha de Denuncia</label><input id="fecha_denuncia" type="date"/></div>
+            <div class="form-group"><label>Competencia</label>
+              <select id="competencia_mp"><option value="">Seleccionar</option><option value="federal">Federal</option><option value="local">Local</option></select>
+            </div>
+            <div class="form-group"><label>Entidad</label><input id="entidad_mp" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Delito</label><input id="delito_mp" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Agencia MP</label><input id="agencia_mp" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>No. Averiguación</label><input id="num_averiguacion" type="text" maxlength="50"/></div>
+            <div class="form-group"><label>Estado Investigación</label><input id="estado_investigacion" type="text" maxlength="100"/></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">IV. Víctima</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Tipo</label>
+              <select id="tipo_victima" onchange="toggleVictima()"><option value="">Seleccionar</option><option value="directa">Directa</option><option value="indirecta">Indirecta</option><option value="ofendido">Ofendido</option></select>
+              <small class="hint"><strong>Directa:</strong> quien sufrió el daño. <strong>Indirecta:</strong> familiares o personas a cargo. <strong>Ofendido:</strong> titular del bien jurídico afectado.</small>
+            </div>
+            <div class="form-group" id="victima-directa-wrap" style="display:none;"><label>Nombre de la Víctima Directa</label><input id="nombre_victima_directa" type="text" maxlength="100"/></div>
+            <div class="form-group" id="relacion-wrap" style="display:none;"><label>Relación con la víctima</label><input id="relacion_victima" type="text" placeholder="Ej: hijo/a, hermano/a" maxlength="50"/></div>
+            <div class="form-group"><label>Tipo de Violencia</label>
+              <select id="tipo_violencia"><option value="">Seleccionar</option><option value="psicologica">Psicológica</option><option value="fisica">Física</option><option value="economica">Económica</option><option value="sexual">Sexual</option><option value="feminicida">Feminicida</option><option value="otro">Otro</option></select>
+            </div>
+          </div>
+          <div class="form-group form-full sub-block">
+            <label>Tipo de Daño Sufrido</label>
+            <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:0.5rem;">
+              <label class="checkbox-group"><input type="checkbox" id="dano_fisico"/> Físico</label>
+              <label class="checkbox-group"><input type="checkbox" id="dano_psicologico"/> Psicológico</label>
+              <label class="checkbox-group"><input type="checkbox" id="dano_patrimonial"/> Patrimonial</label>
+              <label class="checkbox-group"><input type="checkbox" id="dano_sexual"/> Sexual</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">V. Información del Tutor</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Nombre(s) del Tutor/a</label><input id="nombre_tutor" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Primer Apellido del Tutor/a</label><input id="primer_apellido_tutor" type="text" maxlength="60"/></div>
+            <div class="form-group"><label>Segundo Apellido del Tutor/a</label><input id="segundo_apellido_tutor" type="text" maxlength="60"/></div>
+            <div class="form-group"><label>Edad del Tutor/a</label><input id="edad_tutor" type="number" min="0" max="120"/></div>
+            <div class="form-group"><label>Parentesco del Tutor/a</label><select id="id_parentesco"><option value="">Cargando catálogo...</option></select></div>
+            <div class="form-group"><label>Teléfono del Tutor/a</label><input id="telefono_tutor" type="text" maxlength="10" placeholder="10 dígitos"/></div>
+            <div class="form-group"><label>Correo del Tutor/a</label><input id="correo_tutor" type="email" maxlength="100" placeholder="ejemplo@correo.com"/></div>
+          </div>
+
+          <div class="form-group form-full sub-block">
+            <label>Enfermedades del Tutor (Catálogo CIE-11 OMS)</label>
+            <div style="display:flex; gap:0.5rem; margin-bottom: 0.5rem; flex-wrap:wrap;">
+              <select id="select_enf_tutor" style="flex:1; min-width:200px;"><option value="">Cargando catálogo...</option></select>
+              <label style="display:flex; align-items:center; gap:0.5rem; background: var(--bg-deep); padding: 0 1rem; border-radius: 8px;">¿Controlada?
+                <select id="ctrl_tutor" style="padding:0.2rem; border-radius:4px; background:var(--input-bg); color:#1A1A1A; border:1px solid var(--border);"><option value="true">Sí</option><option value="false">No</option></select>
+              </label>
+              <button type="button" class="btn btn-secondary" onclick="addEnfTutor()" style="width:auto; margin:0; padding:0 1rem;">+ Agregar</button>
+            </div>
+            <div id="lista_enf_tutor" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+          </div>
+
+          <div class="form-grid sub-block">
+            <div class="form-group"><label>¿Tiene Discapacidad?</label>
+              <select id="t_tiene_discapacidad" onchange="toggleDiscapacidadTutor()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+          </div>
+          <div class="form-grid" id="caja_discapacidad_tutor" style="display:none;">
+            <div class="form-group"><label>Tipo de Discapacidad</label>
+              <select id="t_tipo_discapacidad"><option value="">N/A</option><option value="Física">Física</option><option value="Sensorial">Sensorial</option><option value="Intelectual/Cognitiva">Intelectual/Cognitiva</option><option value="Psicosocial">Psicosocial</option><option value="Múltiple">Múltiple</option></select>
+            </div>
+            <div class="form-group"><label>Grado de Dependencia</label>
+              <select id="t_grado_dependencia"><option value="">N/A</option><option value="Moderada">Moderada</option><option value="Severa">Severa</option><option value="Gran dependencia">Gran dependencia</option></select>
+            </div>
+            <div class="form-group"><label>Origen de la Discapacidad</label>
+              <select id="t_origen"><option value="N/A">N/A</option><option value="Congénita">Congénita / De nacimiento</option><option value="Adquirida por enfermedad">Adquirida por enfermedad</option><option value="Accidente">Por accidente</option><option value="Violencia">Relacionada a violencia</option></select>
+            </div>
+            <div class="form-group"><label>Temporalidad</label>
+              <select id="t_temporalidad"><option value="N/A">N/A</option><option value="Permanente">Permanente</option><option value="Temporal">Temporal (En rehabilitación)</option></select>
+            </div>
+            <div class="form-group"><label>Ayudas Técnicas (Dispositivos)</label>
+              <select id="t_ayudas"><option value="Ninguna">Ninguna</option><option value="Silla de ruedas">Silla de ruedas</option><option value="Aparatos auditivos">Aparatos auditivos / Implante</option><option value="Lentes adaptados">Lentes adaptados / Bastón ciego</option><option value="Prótesis/Órtesis">Prótesis / Órtesis</option></select>
+            </div>
+            <div class="form-group form-full"><label>Diagnóstico Específico</label><input id="t_diagnostico" type="text" maxlength="255"/></div>
+          </div>
+
+          <div class="form-grid sub-block">
+            <div class="form-group"><label>¿Habla alguna lengua indígena?</label>
+              <select id="t_habla_lengua_indigena" onchange="toggleLenguasTutor()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>¿Habla Español?</label>
+              <select id="t_habla_espanol"><option value="true">Sí</option><option value="false">No</option></select>
+            </div>
+            <div class="form-group"><label>¿Requiere Traductor?</label>
+              <select id="t_requiere_traductor"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group"><label>¿Pertenece a Comunidad Indígena?</label>
+              <select id="t_pertenece_indigena" onchange="toggleComunidadTutor()"><option value="false">No</option><option value="true">Sí</option></select>
+            </div>
+            <div class="form-group form-full" id="caja_lenguas_tutor" style="display:none;">
+              <label>Lenguas Indígenas del Tutor (Catálogo INALI - Variantes)</label>
+              <select id="ids_variantes_lengua_tutor" multiple size="5"><option value="">Cargando catálogo INALI...</option></select>
+              <small class="hint">Mantenga presionado CTRL para seleccionar varios idiomas</small>
+            </div>
+            <div class="form-group" id="caja_comunidad_tutor" style="display:none;">
+              <label>Nombre de Comunidad Indígena</label><input id="t_comunidad_indigena" type="text" maxlength="100"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Datos de Contacto</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Contacto de Emergencia 1</label><input id="contacto_emergencia_1" type="text" maxlength="100" placeholder="Nombre completo"/></div>
+            <div class="form-group"><label>Teléfono Emergencia 1</label><input id="telefono_emergencia_1" type="text" maxlength="10" placeholder="10 dígitos"/></div>
+            <div class="form-group"><label>Contacto de Emergencia 2</label><input id="contacto_emergencia_2" type="text" maxlength="100" placeholder="Nombre completo"/></div>
+            <div class="form-group"><label>Teléfono Emergencia 2</label><input id="telefono_emergencia_2" type="text" maxlength="10" placeholder="10 dígitos"/></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">IX. Datos del Solicitante</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Tipo de Solicitante</label>
+              <select id="tipo_solicitante"><option value="">Seleccionar</option><option value="victima">Víctima u ofendido</option><option value="familiar">Familiar o persona de confianza</option><option value="servidor_publico">Servidor/a público/a o autoridad</option><option value="representante">Representante legal</option></select>
+            </div>
+            <div class="form-group"><label>Nombre del Solicitante</label><input id="nombre_solicitante" type="text" maxlength="100"/></div>
+            <div class="form-group"><label>Parentesco / Relación</label><input id="parentesco_solicitante" type="text" maxlength="50"/></div>
           </div>
         </div>
 
         <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:1rem;">
           <button class="btn btn-ghost" onclick="history.back()">Cancelar</button>
-          <button class="btn btn-primary" onclick="actualizarExpediente()">Guardar Cambios</button>
+          <button class="btn btn-primary" onclick="actualizar()">Guardar Cambios</button>
         </div>
       </div>
     </div>
@@ -90,82 +287,161 @@
 <script>
   requireAuth();
   document.getElementById('sidebar').innerHTML = renderSidebar('nna');
-  const urlParams = new URLSearchParams(window.location.search);
-  const nnaId = urlParams.get('id');
+
+  const ID = new URLSearchParams(location.search).get('id');
+
+  function calcularEdad() {
+    const fecha = document.getElementById('fecha_nac').value;
+    if (!fecha) { document.getElementById('edad').value = ''; return; }
+    const nacimiento = new Date(fecha);
+    const hoy = new Date();
+    let e = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) e--;
+    document.getElementById('edad').value = e;
+  }
+  document.getElementById('fecha_nac').addEventListener('change', calcularEdad);
+
+  function setVal(id, val) { const el = document.getElementById(id); if (el != null && val != null) el.value = val; }
+  function setBool(id, val) { const el = document.getElementById(id); if (el != null) el.value = val ? 'true' : 'false'; }
+
+  async function precarga() {
+    if (!ID) return;
+    try {
+      const n = await fetch(`${API}/api/nna/${ID}`, { headers: authHeaders() }).then(r => r.json());
+      setVal('nombre', n.nombre); setVal('p_apellido', n.primer_apellido); setVal('s_apellido', n.segundo_apellido);
+      if (n.fecha_nacimiento) { setVal('fecha_nac', n.fecha_nacimiento.substring(0,10)); calcularEdad(); }
+      setVal('sexo', n.sexo); setVal('curp', n.curp); setVal('estado_civil', n.estado_civil);
+      setVal('nac_pais', n.lugar_nac_pais); setVal('nacionalidad', n.nacionalidad);
+      setVal('nac_entidad', n.lugar_nac_entidad); setVal('nac_municipio', n.lugar_nac_municipio);
+      setVal('nac_comunidad', n.lugar_nac_comunidad);
+
+      setBool('tiene_discapacidad', n.tiene_discapacidad); toggleDiscapacidad();
+      setVal('tipo_discapacidad', n.tipo_discapacidad); setVal('grado_dependencia', n.grado_dependencia);
+      setVal('origenDiscapacidad', n.origen_discapacidad); setVal('temporalidadDiscapacidad', n.temporalidad);
+      setVal('ayudasTecnicas', n.ayudas_tecnicas); setVal('diagnosticoDiscapacidad', n.diagnostico_especifico);
+
+      setBool('habla_espanol', n.habla_espanol); setBool('requiere_traductor', n.requiere_traductor);
+      setBool('pertenece_indigena', n.pertenece_indigena); setVal('comunidad_indigena', n.comunidad_indigena);
+      if (n.ids_variantes_lengua && n.ids_variantes_lengua.length) {
+        setVal('habla_lengua_indigena', 'true'); toggleLenguas();
+        const sel = document.getElementById('ids_variantes_lengua');
+        for (const op of sel.options) if (n.ids_variantes_lengua.includes(parseInt(op.value))) op.selected = true;
+      }
+      toggleComunidad();
+
+      setVal('cp', n.codigo_postal);
+      if (n.codigo_postal) {
+        try {
+          const sep = await fetch(`${API}/api/sepomex/${n.codigo_postal}`, { headers: authHeaders() }).then(r => r.json());
+          document.getElementById('entidad').value = sep.entidad || '';
+          document.getElementById('municipio').value = sep.municipio || '';
+          const selCol = document.getElementById('id_colonia');
+          selCol.innerHTML = '<option value="">Seleccione su colonia...</option>';
+          sep.colonias.forEach(col => { selCol.innerHTML += `<option value="${col.id}">${col.nombre}</option>`; });
+          if (n.id_colonia) selCol.value = n.id_colonia;
+        } catch(e) {}
+      }
+      setVal('calle', n.calle); setVal('num_ext', n.numero_exterior); setVal('num_int', n.numero_interior);
+      setVal('localidad', n.localidad); setVal('telefono', n.telefono);
+
+      setVal('h_calle', n.lugar_hechos_calle); setVal('h_colonia', n.lugar_hechos_colonia);
+      setVal('h_municipio', n.lugar_hechos_municipio); setVal('h_entidad', n.lugar_hechos_entidad);
+      if (n.fecha_hechos) setVal('fecha_hechos', n.fecha_hechos.substring(0,10));
+      setVal('relato', n.relato_hechos);
+
+      setBool('denuncio_mp', n.denuncio_mp);
+      if (n.fecha_denuncia_mp) setVal('fecha_denuncia', n.fecha_denuncia_mp.substring(0,10));
+      setVal('competencia_mp', n.competencia_mp); setVal('entidad_mp', n.entidad_mp);
+      setVal('delito_mp', n.delito_mp); setVal('agencia_mp', n.agencia_mp);
+      setVal('num_averiguacion', n.numero_averiguacion); setVal('estado_investigacion', n.estado_investigacion);
+
+      setVal('tipo_victima', n.tipo_victima); toggleVictima();
+      setVal('nombre_victima_directa', n.nombre_victima_directa); setVal('relacion_victima', n.relacion_victima);
+      setVal('tipo_violencia', n.tipo_violencia);
+      document.getElementById('dano_fisico').checked = !!n.dano_fisico;
+      document.getElementById('dano_psicologico').checked = !!n.dano_psicologico;
+      document.getElementById('dano_patrimonial').checked = !!n.dano_patrimonial;
+      document.getElementById('dano_sexual').checked = !!n.dano_sexual;
+
+      setVal('nombre_tutor', n.nombre_tutor);
+      setVal('primer_apellido_tutor', n.primer_apellido_tutor);
+      setVal('segundo_apellido_tutor', n.segundo_apellido_tutor);
+      setVal('edad_tutor', n.edad_tutor);
+      if (n.id_parentesco) setVal('id_parentesco', n.id_parentesco);
+      setVal('telefono_tutor', n.telefono_tutor); setVal('correo_tutor', n.correo_tutor);
+      setBool('t_tiene_discapacidad', n.tutor_tiene_discapacidad); toggleDiscapacidadTutor();
+      setVal('t_tipo_discapacidad', n.tutor_tipo_discapacidad); setVal('t_grado_dependencia', n.tutor_grado_dependencia);
+      setVal('t_origen', n.tutor_origen_discapacidad); setVal('t_temporalidad', n.tutor_temporalidad);
+      setVal('t_ayudas', n.tutor_ayudas_tecnicas); setVal('t_diagnostico', n.tutor_diagnostico_especifico);
+      setBool('t_habla_espanol', n.tutor_habla_espanol); setBool('t_requiere_traductor', n.tutor_requiere_traductor);
+      setBool('t_pertenece_indigena', n.tutor_pertenece_indigena); toggleComunidadTutor();
+      setVal('t_comunidad_indigena', n.tutor_comunidad_indigena);
+      if (n.tutor_comunidad_indigena) { setVal('t_pertenece_indigena','true'); toggleComunidadTutor(); }
+      if (n.ids_variantes_lengua_tutor && n.ids_variantes_lengua_tutor.length) {
+        setVal('t_habla_lengua_indigena','true'); toggleLenguasTutor();
+        const selT = document.getElementById('ids_variantes_lengua_tutor');
+        for (const op of selT.options) if (n.ids_variantes_lengua_tutor.includes(parseInt(op.value))) op.selected = true;
+      } else { setBool('t_habla_lengua_indigena', n.tutor_habla_lengua_indigena); toggleLenguasTutor(); }
+
+      setVal('contacto_emergencia_1', n.contacto_emergencia_1); setVal('telefono_emergencia_1', n.telefono_emergencia_1);
+      setVal('contacto_emergencia_2', n.contacto_emergencia_2); setVal('telefono_emergencia_2', n.telefono_emergencia_2);
+
+      setVal('tipo_solicitante', n.tipo_solicitante); setVal('nombre_solicitante', n.nombre_solicitante);
+      setVal('parentesco_solicitante', n.parentesco_solicitante);
+
+      const catEnf = await fetch(`${API}/api/enfermedades`, { headers: authHeaders() }).then(r => r.json());
+      const nombreEnf = (idEnf) => { const e = catEnf.find(x => x.id === idEnf); return e ? (e.codigo_oms ? `${e.codigo_oms} - ${e.nombre}` : e.nombre) : idEnf; };
+      enfNNAArr = (n.enf_nna_detalle || []).map(e => ({ id_enfermedad: e.id_enfermedad, nombre: nombreEnf(e.id_enfermedad), esta_controlada: e.esta_controlada }));
+      enfTutorArr = (n.enf_tutor_detalle || []).map(e => ({ id_enfermedad: e.id_enfermedad, nombre: nombreEnf(e.id_enfermedad), esta_controlada: e.esta_controlada }));
+      renderEnfNNA(); renderEnfTutor();
+    } catch (e) {
+      showAlert('Error de conexión al cargar datos', 'error');
+    }
+  }
 
   window.addEventListener('DOMContentLoaded', async () => {
-    if (!nnaId) { showAlert("ID de expediente no proporcionado", "error"); return; }
-    
     try {
-      const [resPar, resEnf, resLen] = await Promise.all([
-        fetch(`${API}/api/parentescos`, { headers: authHeaders() }),
-        fetch(`${API}/api/enfermedades`, { headers: authHeaders() }),
-        fetch(`${API}/api/lenguas`, { headers: authHeaders() })
-      ]);
-
+      const resPar = await fetch(`${API}/api/parentescos`, { headers: authHeaders() });
       if(resPar.ok) {
-        const data = await resPar.json();
-        document.getElementById('id_parentesco').innerHTML = '<option value="">Seleccionar...</option>' + data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+        const parentescos = await resPar.json();
+        const selectPar = document.getElementById('id_parentesco');
+        selectPar.innerHTML = '<option value="">Seleccione el parentesco...</option>';
+        parentescos.forEach(p => selectPar.innerHTML += `<option value="${p.id}">${p.nombre}</option>`);
       }
-     if(resEnf.ok) {
-        const data = await resEnf.json();
-        const opts = data.map(e => {
-          const textoEnfermedad = e.codigo_oms ? `${e.codigo_oms} - ${e.nombre}` : e.nombre;
-          return `<option value="${e.id}">${textoEnfermedad}</option>`;
-        }).join('');
-        document.getElementById('ids_enfermedades').innerHTML = opts;
-        document.getElementById('ids_enfermedades_tutor').innerHTML = opts;
+      const resEnf = await fetch(`${API}/api/enfermedades`, { headers: authHeaders() });
+      if(resEnf.ok) {
+        const enfermedades = await resEnf.json();
+        const selectEnfNNA = document.getElementById('select_enf_nna');
+        const selectEnfTutor = document.getElementById('select_enf_tutor');
+        selectEnfNNA.innerHTML = '<option value="">Seleccione una enfermedad...</option>';
+        selectEnfTutor.innerHTML = '<option value="">Seleccione una enfermedad...</option>';
+        enfermedades.forEach(e => {
+          const txt = e.codigo_oms ? `${e.codigo_oms} - ${e.nombre}` : e.nombre;
+          selectEnfNNA.innerHTML += `<option value="${e.id}">${txt}</option>`;
+          selectEnfTutor.innerHTML += `<option value="${e.id}">${txt}</option>`;
+        });
       }
-      
+      const resLen = await fetch(`${API}/api/lenguas`, { headers: authHeaders() });
       if(resLen.ok) {
-        const data = await resLen.json();
-        document.getElementById('ids_variantes_lengua').innerHTML = data.map(l => `<option value="${l.id}">${l.nombre}</option>`).join('');
-      }
-
-      const resNna = await fetch(`${API}/api/nna/${nnaId}`, { headers: authHeaders() });
-      if (resNna.ok) {
-        const nna = await resNna.json();
-        document.getElementById('expediente-id').innerText = `ID: ${nna.id} | FUD`;
-        
-        if(document.getElementById('nombre') && nna.nombre) document.getElementById('nombre').value = nna.nombre;
-        if(document.getElementById('p_apellido') && nna.primer_apellido) document.getElementById('p_apellido').value = nna.primer_apellido;
-        if(document.getElementById('s_apellido') && nna.segundo_apellido) document.getElementById('s_apellido').value = nna.segundo_apellido;
-        if(document.getElementById('fecha_nac') && nna.fecha_nacimiento) document.getElementById('fecha_nac').value = nna.fecha_nacimiento;
-        if(document.getElementById('edad') && nna.edad) document.getElementById('edad').value = nna.edad;
-        if(document.getElementById('sexo') && nna.sexo) document.getElementById('sexo').value = nna.sexo;
-        if(document.getElementById('curp') && nna.curp) document.getElementById('curp').value = nna.curp;
-        if(document.getElementById('rfc') && nna.rfc) document.getElementById('rfc').value = nna.rfc;
-        if(document.getElementById('calle') && nna.calle) document.getElementById('calle').value = nna.calle;
-        if(document.getElementById('num_ext') && nna.numero_exterior) document.getElementById('num_ext').value = nna.numero_exterior;
-        if(document.getElementById('telefono') && nna.telefono) document.getElementById('telefono').value = nna.telefono;
-        if(document.getElementById('nombre_tutor') && nna.nombre_tutor) document.getElementById('nombre_tutor').value = nna.nombre_tutor;
-        if(document.getElementById('telefono_tutor') && nna.telefono_tutor) document.getElementById('telefono_tutor').value = nna.telefono_tutor;
-        if(document.getElementById('correo_tutor') && nna.correo_tutor) document.getElementById('correo_tutor').value = nna.correo_tutor;
-
-        if(nna.id_parentesco) document.getElementById('id_parentesco').value = nna.id_parentesco;
-
-        if(nna.codigo_postal) {
-          document.getElementById('cp').value = nna.codigo_postal;
-          await cargarSEPOMEX(nna.codigo_postal, nna.id_colonia);
-        }
-
-        if(nna.ids_enfermedades) marcarMultiples('ids_enfermedades', nna.ids_enfermedades);
-        if(nna.ids_enfermedades_tutor) marcarMultiples('ids_enfermedades_tutor', nna.ids_enfermedades_tutor);
-        if(nna.ids_variantes_lengua) marcarMultiples('ids_variantes_lengua', nna.ids_variantes_lengua);
-
-        document.getElementById('form-container').style.opacity = '1';
-        document.getElementById('form-container').style.pointerEvents = 'auto';
-
-      } else {
-        showAlert("No se pudo cargar el expediente", "error");
+        const lenguas = await resLen.json();
+        const selectLen = document.getElementById('ids_variantes_lengua');
+        const selectLenT = document.getElementById('ids_variantes_lengua_tutor');
+        selectLen.innerHTML = '';
+        selectLenT.innerHTML = '';
+        lenguas.forEach(l => {
+          selectLen.innerHTML += `<option value="${l.id}">${l.nombre}</option>`;
+          selectLenT.innerHTML += `<option value="${l.id}">${l.nombre}</option>`;
+        });
       }
     } catch (error) {
-      console.error(error);
-      showAlert("Error de conexión al cargar datos", "error");
+      showAlert("Error al conectar con la base de datos de catálogos.", "error");
     }
+    await precarga();
   });
 
-  async function cargarSEPOMEX(cp, selectIdColonia = null) {
+  document.getElementById('cp').addEventListener('input', async function() {
+    const cp = this.value.trim();
     if (cp.length === 5) {
       try {
         const res = await fetch(`${API}/api/sepomex/${cp}`, { headers: authHeaders() });
@@ -175,65 +451,241 @@
           document.getElementById('municipio').value = data.municipio;
           const selectColonia = document.getElementById('id_colonia');
           selectColonia.innerHTML = '<option value="">Seleccione su colonia...</option>';
-          data.colonias.forEach(col => {
-            selectColonia.innerHTML += `<option value="${col.id}">${col.nombre}</option>`;
-          });
-          if(selectIdColonia) selectColonia.value = selectIdColonia;
+          data.colonias.forEach(col => { selectColonia.innerHTML += `<option value="${col.id}">${col.nombre}</option>`; });
+        } else {
+          showAlert('Código Postal no encontrado en el catálogo de SEPOMEX.', 'error');
+          document.getElementById('entidad').value = '';
+          document.getElementById('municipio').value = '';
+          document.getElementById('id_colonia').innerHTML = '<option value="">CP Inválido</option>';
         }
-      } catch(e) { console.error(e); }
+      } catch(e) {}
     }
+  });
+
+  function toggleDiscapacidad() {
+    const tiene = document.getElementById('tiene_discapacidad').value === 'true';
+    document.getElementById('caja_discapacidad').style.display = tiene ? 'grid' : 'none';
+  }
+  function toggleDiscapacidadTutor() {
+    const tiene = document.getElementById('t_tiene_discapacidad').value === 'true';
+    document.getElementById('caja_discapacidad_tutor').style.display = tiene ? 'grid' : 'none';
+  }
+  function toggleLenguasTutor() {
+    const habla = document.getElementById('t_habla_lengua_indigena').value === 'true';
+    document.getElementById('caja_lenguas_tutor').style.display = habla ? 'block' : 'none';
+    if (!habla) { const sel = document.getElementById('ids_variantes_lengua_tutor'); for (const op of sel.options) op.selected = false; }
+  }
+  function toggleComunidadTutor() {
+    const pertenece = document.getElementById('t_pertenece_indigena').value === 'true';
+    document.getElementById('caja_comunidad_tutor').style.display = pertenece ? 'block' : 'none';
+    if (!pertenece) document.getElementById('t_comunidad_indigena').value = '';
   }
 
-  document.getElementById('cp').addEventListener('input', function() { cargarSEPOMEX(this.value.trim()); });
-
-  function marcarMultiples(selectId, arrayValues) {
-    const select = document.getElementById(selectId);
-    Array.from(select.options).forEach(opt => {
-      if (arrayValues.includes(parseInt(opt.value))) opt.selected = true;
-    });
+  function toggleVictima() {
+    const tipo = document.getElementById('tipo_victima').value;
+    const mostrar = tipo === 'indirecta' || tipo === 'ofendido' ? 'block' : 'none';
+    document.getElementById('victima-directa-wrap').style.display = mostrar;
+    document.getElementById('relacion-wrap').style.display = mostrar;
+  }
+  function toggleLenguas() {
+    const habla = document.getElementById('habla_lengua_indigena').value === 'true';
+    document.getElementById('caja_lenguas').style.display = habla ? 'block' : 'none';
+    if (!habla) { const sel = document.getElementById('ids_variantes_lengua'); for (const op of sel.options) op.selected = false; }
+  }
+  function toggleComunidad() {
+    const pertenece = document.getElementById('pertenece_indigena').value === 'true';
+    document.getElementById('caja_comunidad').style.display = pertenece ? 'block' : 'none';
+    if (!pertenece) document.getElementById('comunidad_indigena').value = '';
   }
 
+  let enfTutorArr = [];
+  let enfNNAArr = [];
+
+  function addEnfTutor() {
+    const sel = document.getElementById('select_enf_tutor');
+    const idEnf = parseInt(sel.value);
+    if(!idEnf) return showAlert('Selecciona una enfermedad primero.', 'error');
+    const nombre = sel.options[sel.selectedIndex].text;
+    const controlada = document.getElementById('ctrl_tutor').value === 'true';
+    if(enfTutorArr.find(e => e.id_enfermedad === idEnf)) return showAlert('La enfermedad ya está en la lista', 'error');
+    enfTutorArr.push({ id_enfermedad: idEnf, nombre: nombre, esta_controlada: controlada });
+    renderEnfTutor();
+  }
+  function removeEnfTutor(id) { enfTutorArr = enfTutorArr.filter(e => e.id_enfermedad !== id); renderEnfTutor(); }
+  function renderEnfTutor() {
+    document.getElementById('lista_enf_tutor').innerHTML = enfTutorArr.map(e => `
+      <div style="display:flex; justify-content:space-between; background:var(--input-bg); padding:0.5rem 1rem; border-radius:5px; border:1px solid var(--border);">
+        <span>${e.nombre} <strong style="color:${e.esta_controlada ? 'var(--green)' : 'var(--rose)'}">(${e.esta_controlada ? 'Controlada' : 'No controlada'})</strong></span>
+        <button type="button" onclick="removeEnfTutor(${e.id_enfermedad})" style="background:transparent; border:none; color:var(--rose); cursor:pointer;">Quitar</button>
+      </div>`).join('');
+  }
+  function addEnfNNA() {
+    const sel = document.getElementById('select_enf_nna');
+    const idEnf = parseInt(sel.value);
+    if(!idEnf) return showAlert('Selecciona una enfermedad primero.', 'error');
+    const nombre = sel.options[sel.selectedIndex].text;
+    const controlada = document.getElementById('ctrl_nna').value === 'true';
+    if(enfNNAArr.find(e => e.id_enfermedad === idEnf)) return showAlert('La enfermedad ya está en la lista', 'error');
+    enfNNAArr.push({ id_enfermedad: idEnf, nombre: nombre, esta_controlada: controlada });
+    renderEnfNNA();
+  }
+  function removeEnfNNA(id) { enfNNAArr = enfNNAArr.filter(e => e.id_enfermedad !== id); renderEnfNNA(); }
+  function renderEnfNNA() {
+    document.getElementById('lista_enf_nna').innerHTML = enfNNAArr.map(e => `
+      <div style="display:flex; justify-content:space-between; background:var(--input-bg); padding:0.5rem 1rem; border-radius:5px; border:1px solid var(--border);">
+        <span>${e.nombre} <strong style="color:${e.esta_controlada ? 'var(--green)' : 'var(--rose)'}">(${e.esta_controlada ? 'Controlada' : 'No controlada'})</strong></span>
+        <button type="button" onclick="removeEnfNNA(${e.id_enfermedad})" style="background:transparent; border:none; color:var(--rose); cursor:pointer;">Quitar</button>
+      </div>`).join('');
+  }
+
+  function limpiarTexto(texto) { if (!texto) return texto; return texto.toString().trim().replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   function g(id) { return document.getElementById(id)?.value.trim() || null; }
+  function gb(id) { return document.getElementById(id)?.checked || false; }
 
-  async function actualizarExpediente() {
+  async function actualizar() {
     const colSelect = document.getElementById('id_colonia');
+    const coloniaTexto = colSelect.options[colSelect.selectedIndex]?.text || '';
+
     const body = {
-      nombre: g('nombre'), 
-      primer_apellido: g('p_apellido'), 
-      segundo_apellido: g('s_apellido'),
+      nombre: limpiarTexto(g('nombre')),
+      primer_apellido: limpiarTexto(g('p_apellido')),
+      segundo_apellido: limpiarTexto(g('s_apellido')),
       fecha_nacimiento: g('fecha_nac'),
-      edad: parseInt(g('edad')) || null, 
+      edad: parseInt(g('edad')),
       sexo: g('sexo'),
-      curp: g('curp'), 
-      rfc: g('rfc'),
-      calle: g('calle'),
-      numero_exterior: g('num_ext'),
-      codigo_postal: g('cp'), 
-      colonia: colSelect.options[colSelect.selectedIndex]?.text || null,
-      telefono: g('telefono'), 
-      nombre_tutor: g('nombre_tutor'), 
-      telefono_tutor: g('telefono_tutor'),
-      correo_tutor: g('correo_tutor'),
+      curp: limpiarTexto(g('curp')),
+      estado_civil: g('estado_civil'),
+      nacionalidad: limpiarTexto(g('nacionalidad')),
+      lugar_nac_pais: limpiarTexto(g('nac_pais')),
+      lugar_nac_entidad: limpiarTexto(g('nac_entidad')),
+      lugar_nac_municipio: limpiarTexto(g('nac_municipio')),
+      lugar_nac_comunidad: limpiarTexto(g('nac_comunidad')),
+      codigo_postal: g('cp'),
+      calle: limpiarTexto(g('calle')),
+      numero_exterior: limpiarTexto(g('num_ext')),
+      numero_interior: limpiarTexto(g('num_int')),
+      colonia: limpiarTexto(coloniaTexto),
+      id_colonia: parseInt(g('id_colonia')) || null,
+      localidad: limpiarTexto(g('localidad')),
+      telefono: limpiarTexto(g('telefono')),
+      tipo_victima: g('tipo_victima'),
+      nombre_victima_directa: limpiarTexto(g('nombre_victima_directa')),
+      relacion_victima: limpiarTexto(g('relacion_victima')),
+      lugar_hechos_calle: limpiarTexto(g('h_calle')),
+      lugar_hechos_colonia: limpiarTexto(g('h_colonia')),
+      lugar_hechos_municipio: limpiarTexto(g('h_municipio')),
+      lugar_hechos_entidad: limpiarTexto(g('h_entidad')),
+      fecha_hechos: g('fecha_hechos'),
+      relato_hechos: limpiarTexto(g('relato')),
+      dano_fisico: gb('dano_fisico'),
+      dano_psicologico: gb('dano_psicologico'),
+      dano_patrimonial: gb('dano_patrimonial'),
+      dano_sexual: gb('dano_sexual'),
+      denuncio_mp: g('denuncio_mp') === 'true',
+      fecha_denuncia_mp: g('fecha_denuncia'),
+      competencia_mp: g('competencia_mp'),
+      entidad_mp: limpiarTexto(g('entidad_mp')),
+      delito_mp: limpiarTexto(g('delito_mp')),
+      agencia_mp: limpiarTexto(g('agencia_mp')),
+      numero_averiguacion: limpiarTexto(g('num_averiguacion')),
+      estado_investigacion: limpiarTexto(g('estado_investigacion')),
+      nombre_tutor: limpiarTexto(g('nombre_tutor')),
+      primer_apellido_tutor: limpiarTexto(g('primer_apellido_tutor')),
+      segundo_apellido_tutor: limpiarTexto(g('segundo_apellido_tutor')),
+      edad_tutor: parseInt(g('edad_tutor')) || null,
+      telefono_tutor: limpiarTexto(g('telefono_tutor')),
+      correo_tutor: limpiarTexto(g('correo_tutor')),
       id_parentesco: parseInt(g('id_parentesco')) || null,
-      ids_enfermedades: Array.from(document.getElementById('ids_enfermedades').selectedOptions).map(o => parseInt(o.value)).filter(v => !isNaN(v)),
-      ids_enfermedades_tutor: Array.from(document.getElementById('ids_enfermedades_tutor').selectedOptions).map(o => parseInt(o.value)).filter(v => !isNaN(v)),
-      ids_variantes_lengua: Array.from(document.getElementById('ids_variantes_lengua').selectedOptions).map(o => parseInt(o.value)).filter(v => !isNaN(v))
+      contacto_emergencia_1: limpiarTexto(g('contacto_emergencia_1')),
+      telefono_emergencia_1: limpiarTexto(g('telefono_emergencia_1')),
+      contacto_emergencia_2: limpiarTexto(g('contacto_emergencia_2')),
+      telefono_emergencia_2: limpiarTexto(g('telefono_emergencia_2')),
+      tipo_violencia: g('tipo_violencia'),
+      tiene_discapacidad: g('tiene_discapacidad') === 'true',
+      tipo_discapacidad: g('tipo_discapacidad'),
+      grado_dependencia: g('grado_dependencia'),
+      origen_discapacidad: g('origenDiscapacidad'),
+      temporalidad: g('temporalidadDiscapacidad'),
+      ayudas_tecnicas: g('ayudasTecnicas'),
+      diagnostico_especifico: limpiarTexto(g('diagnosticoDiscapacidad')),
+      habla_espanol: g('habla_espanol') === 'true',
+      requiere_traductor: g('requiere_traductor') === 'true',
+      pertenece_indigena: g('pertenece_indigena') === 'true',
+      comunidad_indigena: limpiarTexto(g('comunidad_indigena')),
+      tutor_tiene_discapacidad: g('t_tiene_discapacidad') === 'true',
+      tutor_tipo_discapacidad: g('t_tipo_discapacidad'),
+      tutor_grado_dependencia: g('t_grado_dependencia'),
+      tutor_origen_discapacidad: g('t_origen'),
+      tutor_temporalidad: g('t_temporalidad'),
+      tutor_ayudas_tecnicas: g('t_ayudas'),
+      tutor_diagnostico_especifico: limpiarTexto(g('t_diagnostico')),
+      tutor_habla_espanol: g('t_habla_espanol') === 'true',
+      tutor_requiere_traductor: g('t_requiere_traductor') === 'true',
+      tutor_pertenece_indigena: g('t_pertenece_indigena') === 'true',
+      tutor_habla_lengua_indigena: g('t_habla_lengua_indigena') === 'true',
+      tutor_comunidad_indigena: limpiarTexto(g('t_comunidad_indigena')),
+      ids_variantes_lengua_tutor: Array.from(document.getElementById('ids_variantes_lengua_tutor').selectedOptions).map(opt => parseInt(opt.value)).filter(val => !isNaN(val)),
+      tipo_solicitante: g('tipo_solicitante'),
+      nombre_solicitante: limpiarTexto(g('nombre_solicitante')),
+      parentesco_solicitante: limpiarTexto(g('parentesco_solicitante')),
+      enfermedades_nna: enfNNAArr.map(e => ({ id_enfermedad: e.id_enfermedad, esta_controlada: e.esta_controlada })),
+      enfermedades_tutor: enfTutorArr.map(e => ({ id_enfermedad: e.id_enfermedad, esta_controlada: e.esta_controlada })),
+      ids_variantes_lengua: Array.from(document.getElementById('ids_variantes_lengua').selectedOptions).map(opt => parseInt(opt.value)).filter(val => !isNaN(val))
     };
 
+    if (!body.nombre || !body.primer_apellido || !body.curp || !body.fecha_nacimiento || !body.codigo_postal || !body.telefono) {
+      showAlert('¡Alto! Faltan datos obligatorios: Nombre, Apellido, CURP, Fecha de Nacimiento, CP o Teléfono.', 'error');
+      return;
+    }
+    if (body.edad === null || isNaN(body.edad) || body.edad < 0 || body.edad > 17) {
+      showAlert('La edad debe ser entre 0 y 17 años, y se calcula con la fecha de nacimiento.', 'error');
+      return;
+    }
+    if (body.curp && body.curp.length !== 18) {
+      showAlert('El CURP no es válido. Debe tener exactamente 18 caracteres.', 'error');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (body.correo_tutor && !emailRegex.test(body.correo_tutor)) {
+      showAlert('Ingresa un correo de tutor válido (ejemplo@dominio.com).', 'error');
+      return;
+    }
+    const numRegex = /^\d+$/;
+    if (body.codigo_postal && (!numRegex.test(body.codigo_postal) || body.codigo_postal.length !== 5)) {
+      showAlert('El Código Postal debe contener exactamente 5 números.', 'error');
+      return;
+    }
+    const tels = [
+      { num: body.telefono, nombre: 'Domicilio' },
+      { num: body.telefono_tutor, nombre: 'Tutor' },
+      { num: body.telefono_emergencia_1, nombre: 'Emergencia 1' },
+      { num: body.telefono_emergencia_2, nombre: 'Emergencia 2' }
+    ];
+    for (let tel of tels) {
+      if (tel.num && (!numRegex.test(tel.num) || tel.num.length !== 10)) {
+        showAlert(`El teléfono de ${tel.nombre} debe tener exactamente 10 números.`, 'error');
+        return;
+      }
+    }
+
     try {
-      const res = await fetch(`${API}/api/nna/${nnaId}`, {
-        method: 'PUT',
-        headers: authHeaders(),
-        body: JSON.stringify(body)
-      });
+      const res = await fetch(`${API}/api/nna/${ID}`, { method:'PUT', headers: authHeaders(), body: JSON.stringify(body) });
+      const data = await res.json();
       if (res.ok) {
         showAlert('Expediente actualizado exitosamente', 'success');
-        setTimeout(() => location.href = 'lista-nna.html', 1500);
+        setTimeout(() => location.href='lista-nna.html', 1500);
       } else {
-        const data = await res.json();
-        showAlert(data.detail || 'Error al actualizar', 'error');
+        let m = data.detail || 'Error al crear expediente';
+        let msg = m;
+        if (m.includes('curp_key') || m.includes('duplicate key')) msg = 'Ya existe un NNA registrado con este CURP.';
+        else if (m.includes('value too long')) msg = 'Error: Uno de los textos es demasiado largo para el sistema.';
+        else if (m.includes('null value in column')) msg = 'Error: Faltan datos obligatorios que la base de datos necesita.';
+        else if (m.includes('violates check constraint')) msg = 'Error: Verificaste una edad o formato no permitido.';
+        showAlert(msg, 'error');
       }
-    } catch (e) { showAlert('Error de conexión', 'error'); }
+    } catch (error) {
+      showAlert('No se pudo conectar con el servidor. Verifica tu conexión.', 'error');
+    }
   }
 
   function showAlert(msg, tipo) {

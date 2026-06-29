@@ -22,7 +22,6 @@
       </div>
       <div class="tabs">
         <div class="tab active" onclick="cambiarTab('todos',this)">Todos</div>
-        <div class="tab" onclick="cambiarTab('sin_proceso',this)">Sin Proceso</div>
         <div class="tab" onclick="cambiarTab('en_proceso',this)">En Proceso</div>
         <div class="tab" onclick="cambiarTab('concluido',this)">Concluidos</div>
       </div>
@@ -76,14 +75,62 @@
           <td>${n.curp||'—'}</td>
           <td>${n.tipo_victima||'—'}</td>
           <td>${n.tipo_violencia||'—'}</td>
-          <td><span class="badge ${bEstado[n.estatus]||''}">${lEstado[n.estatus]||n.estatus}</span></td>
+          <td><span class="badge ${bEstado[n.estatus]||''}" style="cursor:pointer;" title="Clic para cambiar el estatus" onclick="toggleEstatus(${n.id}, '${n.estatus}')">${lEstado[n.estatus]||n.estatus} ⇄</span></td>
           <td>${n.fecha_ingreso ? new Date(n.fecha_ingreso).toLocaleDateString('es-MX') : '—'}</td>
-          <td style="display:flex;gap:.5rem;">
-            <button class="btn btn-secondary btn-sm" onclick="location.href='ver-nna.html?id=${n.id}'">Ver</button>
-            <button class="btn btn-ghost btn-sm" onclick="location.href='editar-nna.html?id=${n.id}'">Editar</button>
+          <td>
+            <div style="display:flex;gap:.5rem;align-items:center;">
+              <button class="btn btn-secondary btn-sm" onclick="location.href='ver-nna.html?id=${n.id}'">Ver</button>
+              <button class="btn btn-ghost btn-sm" onclick="location.href='editar-nna.html?id=${n.id}'">Editar</button>
+              <button class="btn btn-danger btn-sm" onclick="eliminar(${n.id})">Eliminar</button>
+            </div>
           </td>
         </tr>`).join('');
   }
+  async function toggleEstatus(id, estatusActual) {
+    const nuevo = estatusActual === 'concluido' ? 'en_proceso' : 'concluido';
+    const pass = prompt('Para cambiar el estatus, ingresa tu contraseña:');
+    if (pass === null || pass === '') return;
+    try {
+      const res = await fetch(`${API}/api/nna/${id}/estatus`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ estatus: nuevo, password: pass })
+      });
+      if (res.ok) {
+        const item = todos.find(n => n.id === id);
+        if (item) item.estatus = nuevo;
+        renderTabla();
+      } else {
+        const d = await res.json().catch(()=>({}));
+        alert(d.detail || 'No se pudo cambiar el estatus');
+      }
+    } catch (e) {
+      alert('No se pudo conectar con el servidor');
+    }
+  }
+
+  async function eliminar(id) {
+    if (!confirm('¿Seguro que deseas eliminar este expediente? Esta acción no se puede deshacer.')) return;
+    const pass = prompt('Para eliminar, ingresa tu contraseña:');
+    if (pass === null || pass === '') return;
+    try {
+      const res = await fetch(`${API}/api/nna/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+        body: JSON.stringify({ password: pass })
+      });
+      if (res.ok) {
+        todos = todos.filter(n => n.id !== id);
+        renderTabla();
+      } else {
+        const d = await res.json().catch(()=>({}));
+        alert(d.detail || 'No se pudo eliminar el expediente');
+      }
+    } catch (e) {
+      alert('No se pudo conectar con el servidor');
+    }
+  }
+
   cargar();
 </script>
 </body>

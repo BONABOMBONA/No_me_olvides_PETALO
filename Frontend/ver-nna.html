@@ -6,6 +6,15 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    .det-section { margin-top: 2rem; }
+    .det-title { font-size: 1.05rem; font-weight: 700; color: var(--text-1); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    .det-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem 2rem; }
+    .det-campo { display: flex; flex-direction: column; gap: 0.2rem; }
+    .det-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-3); font-weight: 700; }
+    .det-value { font-size: 0.95rem; color: var(--text-1); }
+    .det-full { grid-column: 1 / -1; }
+  </style>
 </head>
 <body>
 <div class="app">
@@ -28,11 +37,10 @@
 <script>
   requireAuth();
   document.getElementById('sidebar').innerHTML = renderSidebar('nna');
-  
+
   async function cargar() {
     const id = new URLSearchParams(window.location.search).get('id');
     if(!id) { document.getElementById('contenido-nna').innerHTML = 'ID de expediente no válido.'; return; }
-
     try {
       const [resNna, resPar, resEnf, resLen] = await Promise.all([
         fetch(`${API}/api/nna/${id}`, { headers: authHeaders() }),
@@ -40,89 +48,188 @@
         fetch(`${API}/api/enfermedades`, { headers: authHeaders() }),
         fetch(`${API}/api/lenguas`, { headers: authHeaders() })
       ]);
-
       if(!resNna.ok) { document.getElementById('contenido-nna').innerHTML = 'Expediente no encontrado'; return; }
-      
       const n = await resNna.json();
       const parentescos = resPar.ok ? await resPar.json() : [];
       const enfermedades = resEnf.ok ? await resEnf.json() : [];
       const lenguas = resLen.ok ? await resLen.json() : [];
 
-      const getPar = (id_par) => parentescos.find(p => p.id === id_par)?.nombre || 'No especificado';
-      const getEnf = (ids) => ids && ids.length > 0 
-        ? ids.map(i => `<span class="badge badge-sin" style="margin-right:4px;">${enfermedades.find(e => e.id === i)?.nombre || i}</span>`).join('') 
+      const v = (x) => (x !== null && x !== undefined && x !== '') ? x : '—';
+      const sino = (b) => b === true ? 'Sí' : (b === false ? 'No' : '—');
+      const cap = (t) => t ? t.charAt(0).toUpperCase() + t.slice(1) : '—';
+      const getPar = (id_par) => parentescos.find(p => p.id === id_par)?.nombre || '—';
+      const getEnf = (ids) => ids && ids.length > 0
+        ? ids.map(i => enfermedades.find(e => e.id === i)?.nombre || i).join(', ')
         : 'Ninguna registrada';
-      const getLen = (ids) => ids && ids.length > 0 
-        ? ids.map(i => `<span class="badge badge-proceso" style="margin-right:4px;">${lenguas.find(l => l.id === i)?.nombre || i}</span>`).join('') 
+      const getLen = (ids) => ids && ids.length > 0
+        ? ids.map(i => lenguas.find(l => l.id === i)?.nombre || i).join(', ')
         : 'Ninguna (Español)';
+      const tiposVic = { directa:'Directa (sufrió el daño)', indirecta:'Indirecta (familiar o a cargo)', ofendido:'Ofendido (titular del bien jurídico)' };
 
-      const lugarNacimiento = (n.lugar_nac_municipio || n.lugar_nac_entidad) 
-        ? `${n.lugar_nac_municipio || ''}${n.lugar_nac_municipio && n.lugar_nac_entidad ? ', ' : ''}${n.lugar_nac_entidad || ''}` 
-        : '—';
+      let edad = '—';
+      if (n.fecha_nacimiento) {
+        const nac = new Date(n.fecha_nacimiento), hoy = new Date();
+        let e = hoy.getFullYear() - nac.getFullYear();
+        const m = hoy.getMonth() - nac.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) e--;
+        edad = e;
+      }
+      const fecha = (f) => f ? new Date(f).toLocaleDateString('es-MX') : '—';
+      const C = (label, value, full) => `<div class="det-campo ${full?'det-full':''}"><span class="det-label">${label}</span><span class="det-value">${value}</span></div>`;
+      const danos = [n.dano_fisico?'Físico':null, n.dano_psicologico?'Psicológico':null, n.dano_patrimonial?'Patrimonial':null, n.dano_sexual?'Sexual':null].filter(Boolean);
 
       document.getElementById('contenido-nna').innerHTML = `
         <div class="page-header">
           <div>
-            <div class="page-title">${n.nombre} ${n.primer_apellido} ${n.segundo_apellido || ''}</div>
-            <div class="page-sub">CURP: ${n.curp || 'No registrada'} | Edad: ${n.edad || 'N/A'} años</div>
+            <div class="page-title">${n.nombre} ${n.primer_apellido||''} ${n.segundo_apellido||''}</div>
+            <div class="page-sub">CURP: ${v(n.curp)} | Edad: ${edad} años | Basado en el FUD, LGDNNA, CIE-11 (OMS), INALI y SEPOMEX</div>
           </div>
           <button class="btn btn-primary" onclick="location.href='editar-nna.html?id=${n.id}'">✏️ Editar Expediente</button>
         </div>
-        
-        <div class="card" style="padding:2rem;">
-          
-          <h3 style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:0.5rem;">I. Datos Personales y Domicilio</h3>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem;">
-            <p><strong>Nacionalidad:</strong> ${n.nacionalidad || 'Mexicana'}</p>
-            <p><strong>Código Postal:</strong> ${n.codigo_postal || '—'}</p>
-            <p><strong>Teléfono:</strong> ${n.telefono || '—'}</p>
-            <p><strong>Lugar de Nac.:</strong> ${lugarNacimiento}</p>
+
+        <div class="card">
+          <div class="det-section">
+            <div class="det-title">I. Datos de la Víctima</div>
+            <div class="det-grid">
+              ${C('Nombre(s)', v(n.nombre))}
+              ${C('Primer Apellido', v(n.primer_apellido))}
+              ${C('Segundo Apellido', v(n.segundo_apellido))}
+              ${C('Fecha de Nacimiento', fecha(n.fecha_nacimiento))}
+              ${C('Edad', edad)}
+              ${C('Sexo', v(n.sexo))}
+              ${C('CURP', v(n.curp))}
+              ${C('Estado Civil', v(n.estado_civil))}
+              ${C('Enfermedades del NNA (CIE-11)', getEnf(n.ids_enfermedades), true)}
+              ${C('País de Nacimiento', v(n.lugar_nac_pais))}
+              ${C('Nacionalidad', v(n.nacionalidad))}
+              ${C('Entidad Federativa de Nacimiento', v(n.lugar_nac_entidad))}
+              ${C('Delegación/Municipio de Nacimiento', v(n.lugar_nac_municipio))}
+            </div>
+            <div class="det-grid" style="margin-top:1rem;border-top:1px dashed var(--border);padding-top:1rem;">
+              ${C('¿Tiene Discapacidad?', sino(n.tiene_discapacidad))}
+              ${C('Tipo de Discapacidad', v(n.tipo_discapacidad))}
+              ${C('Grado de Dependencia', v(n.grado_dependencia))}
+              ${C('Origen de la Discapacidad', v(n.origen_discapacidad))}
+              ${C('Temporalidad', v(n.temporalidad))}
+              ${C('Ayudas Técnicas', v(n.ayudas_tecnicas))}
+              ${C('Diagnóstico Específico', v(n.diagnostico_especifico), true)}
+            </div>
+            <div class="det-grid" style="margin-top:1rem;border-top:1px dashed var(--border);padding-top:1rem;">
+              ${C('¿Habla alguna lengua indígena?', getLen(n.ids_variantes_lengua), true)}
+              ${C('¿Habla Español?', sino(n.habla_espanol))}
+              ${C('¿Requiere Traductor?', sino(n.requiere_traductor))}
+              ${C('¿Pertenece a Comunidad Indígena?', sino(n.pertenece_indigena))}
+              ${n.pertenece_indigena ? C('Nombre de Comunidad', v(n.comunidad_indigena)) : ''}
+            </div>
           </div>
 
-          <h3 style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:0.5rem;">II. Red de Apoyo (Tutor)</h3>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem;">
-            <p><strong>Tutor/a:</strong> ${n.nombre_tutor || 'No registrado'}</p>
-            <p><strong>Parentesco:</strong> ${getPar(n.id_parentesco)}</p>
-            <p><strong>Teléfono:</strong> ${n.telefono_tutor || '—'}</p>
-            <p><strong>Correo:</strong> ${n.correo_tutor || '—'}</p>
-            <div style="grid-column: 1 / -1;">
-              <p style="margin-bottom:0.5rem;"><strong>Enfermedades del Tutor (CIE-11):</strong></p>
-              <div>${getEnf(n.ids_enfermedades_tutor)}</div>
+          <div class="det-section">
+            <div class="det-title">Domicilio</div>
+            <div class="det-grid">
+              ${C('Código Postal', v(n.codigo_postal))}
+              ${C('Calle', v(n.calle))}
+              ${C('Número Exterior', v(n.numero_exterior))}
+              ${C('Número Interior', v(n.numero_interior))}
+              ${C('Colonia / Asentamiento', v(n.colonia_nombre))}
+              ${C('Delegación / Municipio', v(n.municipio_nombre))}
+              ${C('Entidad Federativa', v(n.entidad_nombre))}
+              ${C('Localidad', v(n.localidad))}
+              ${C('Teléfono de Domicilio', v(n.telefono))}
             </div>
           </div>
 
-          <h3 style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:0.5rem;">III. Vulnerabilidad y Salud del NNA</h3>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:2rem;">
-            <div style="grid-column: 1 / -1;">
-              <p style="margin-bottom:0.5rem;"><strong>Enfermedades del NNA (CIE-11):</strong></p>
-              <div>${getEnf(n.ids_enfermedades)}</div>
+          <div class="det-section">
+            <div class="det-title">II. Lugar y Relato de los Hechos</div>
+            <div class="det-grid">
+              ${C('Calle', v(n.lugar_hechos_calle))}
+              ${C('Colonia', v(n.lugar_hechos_colonia))}
+              ${C('Delegación / Municipio / Alcaldía', v(n.lugar_hechos_municipio))}
+              ${C('Entidad', v(n.lugar_hechos_entidad))}
+              ${C('Fecha de los Hechos', fecha(n.fecha_hechos))}
+              ${C('Relato de los Hechos', v(n.relato_hechos), true)}
             </div>
-            <div style="grid-column: 1 / -1;">
-              <p style="margin-bottom:0.5rem;"><strong>Lenguas Indígenas (INALI):</strong></p>
-              <div>${getLen(n.ids_variantes_lengua)}</div>
-            </div>
-            <p><strong>¿Requiere Traductor?</strong> ${n.requiere_traductor ? 'Sí' : 'No'}</p>
-            <p><strong>Discapacidad:</strong> ${n.tiene_discapacidad ? (n.tipo_discapacidad + ' (' + n.grado_dependencia + ')') : 'No'}</p>
           </div>
 
-          <h3 style="margin-bottom:1rem; color:var(--primary); border-bottom:1px solid var(--border); padding-bottom:0.5rem;">IV. Hechos y Situación Legal</h3>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-            <p><strong>Tipo de Violencia:</strong> ${n.tipo_violencia || 'No especificado'}</p>
-            <p><strong>¿Denunció en MP?</strong> ${n.denuncio_mp ? 'Sí (' + (n.delito_mp||'Sin especificar') + ')' : 'No'}</p>
-            <div style="grid-column: 1 / -1;">
-              <p><strong>Relato de los hechos:</strong></p>
-              <p style="background:var(--bg-deep); padding:1rem; border-radius:8px; margin-top:0.5rem; white-space:pre-wrap;">${n.relato_hechos || 'Sin relato registrado.'}</p>
+          <div class="det-section">
+            <div class="det-title">III. Investigación Ministerial</div>
+            <div class="det-grid">
+              ${C('¿Denunció ante el MP?', sino(n.denuncio_mp))}
+              ${C('Fecha de Denuncia', fecha(n.fecha_denuncia_mp))}
+              ${C('Competencia', cap(n.competencia_mp))}
+              ${C('Entidad', v(n.entidad_mp))}
+              ${C('Delito', v(n.delito_mp))}
+              ${C('Agencia MP', v(n.agencia_mp))}
+              ${C('No. Averiguación', v(n.numero_averiguacion))}
+              ${C('Estado Investigación', v(n.estado_investigacion))}
             </div>
           </div>
-        </div>
-      `;
-    } catch (error) {
-      console.error(error);
-      document.getElementById('contenido-nna').innerHTML = '<div class="alert alert-error">Error de conexión al cargar el expediente.</div>';
+
+          <div class="det-section">
+            <div class="det-title">IV. Víctima</div>
+            <div class="det-grid">
+              ${C('Tipo', tiposVic[n.tipo_victima] || '—')}
+              ${C('Tipo de Violencia', cap(n.tipo_violencia))}
+              ${n.nombre_victima_directa ? C('Nombre de la Víctima Directa', v(n.nombre_victima_directa)) : ''}
+              ${n.relacion_victima ? C('Relación con la víctima', v(n.relacion_victima)) : ''}
+              ${C('Tipo de Daño Sufrido', danos.length ? danos.join(', ') : '—', true)}
+            </div>
+          </div>
+
+          <div class="det-section">
+            <div class="det-title">V. Información del Tutor</div>
+            <div class="det-grid">
+              ${C('Nombre(s) del Tutor/a', v(n.nombre_tutor))}
+              ${C('Primer Apellido del Tutor/a', v(n.primer_apellido_tutor))}
+              ${C('Segundo Apellido del Tutor/a', v(n.segundo_apellido_tutor))}
+              ${C('Edad del Tutor/a', v(n.edad_tutor))}
+              ${C('Parentesco del Tutor/a', getPar(n.id_parentesco))}
+              ${C('Teléfono del Tutor/a', v(n.telefono_tutor))}
+              ${C('Correo del Tutor/a', v(n.correo_tutor))}
+              ${C('Enfermedades del Tutor (CIE-11)', getEnf(n.ids_enfermedades_tutor), true)}
+            </div>
+            <div class="det-grid" style="margin-top:1rem;border-top:1px dashed var(--border);padding-top:1rem;">
+              ${C('¿Tiene Discapacidad?', sino(n.tutor_tiene_discapacidad))}
+              ${C('Tipo de Discapacidad', v(n.tutor_tipo_discapacidad))}
+              ${C('Grado de Dependencia', v(n.tutor_grado_dependencia))}
+              ${C('Origen de la Discapacidad', v(n.tutor_origen_discapacidad))}
+              ${C('Temporalidad', v(n.tutor_temporalidad))}
+              ${C('Ayudas Técnicas', v(n.tutor_ayudas_tecnicas))}
+              ${C('Diagnóstico Específico', v(n.tutor_diagnostico_especifico), true)}
+            </div>
+            <div class="det-grid" style="margin-top:1rem;border-top:1px dashed var(--border);padding-top:1rem;">
+              ${C('¿Habla alguna lengua indígena?', sino(n.tutor_habla_lengua_indigena))}
+              ${(n.ids_variantes_lengua_tutor && n.ids_variantes_lengua_tutor.length) ? C('Lenguas Indígenas del Tutor', getLen(n.ids_variantes_lengua_tutor), true) : ''}
+              ${C('¿Habla Español?', sino(n.tutor_habla_espanol))}
+              ${C('¿Requiere Traductor?', sino(n.tutor_requiere_traductor))}
+              ${C('¿Pertenece a Comunidad Indígena?', sino(n.tutor_pertenece_indigena))}
+              ${n.tutor_pertenece_indigena ? C('Nombre de Comunidad (Tutor)', v(n.tutor_comunidad_indigena)) : ''}
+            </div>
+          </div>
+
+          <div class="det-section">
+            <div class="det-title">Datos de Contacto</div>
+            <div class="det-grid">
+              ${C('Contacto de Emergencia 1', v(n.contacto_emergencia_1))}
+              ${C('Teléfono Emergencia 1', v(n.telefono_emergencia_1))}
+              ${C('Contacto de Emergencia 2', v(n.contacto_emergencia_2))}
+              ${C('Teléfono Emergencia 2', v(n.telefono_emergencia_2))}
+            </div>
+          </div>
+
+          <div class="det-section">
+            <div class="det-title">IX. Datos del Solicitante</div>
+            <div class="det-grid">
+              ${C('Tipo de Solicitante', v(n.tipo_solicitante))}
+              ${C('Nombre del Solicitante', v(n.nombre_solicitante))}
+              ${C('Parentesco / Relación', v(n.parentesco_solicitante))}
+            </div>
+          </div>
+        </div>`;
+    } catch (e) {
+      document.getElementById('contenido-nna').innerHTML = '<div class="alert alert-error">Error de conexión al cargar datos</div>';
     }
   }
-
-  window.onload = cargar;
+  cargar();
 </script>
 </body>
 </html>
