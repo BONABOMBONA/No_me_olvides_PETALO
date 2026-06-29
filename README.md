@@ -31,8 +31,8 @@ Ser el aliado de confianza en gestión de datos para organizaciones que generan 
 | Integrante | Rol |
 |---|---|
 | Edgar Alessandro García Hernández | Backend y base de datos |
-| Dana Paola Soria López | Frontend |
-| Lesly Velázquez Rivero | Documentación y catálogos |
+| Dana Paola Soria López | Frontend y base de datos |
+| Lesly Velázquez Rivero | Catálogos y base de datos|
 
 ---
 
