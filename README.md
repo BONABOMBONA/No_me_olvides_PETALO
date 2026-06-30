@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="img/no_me_olvides.png" alt="No Me Olvides" width="120"/>
+<img src="No_me_olvides_by_PETALO/img/no_me_olvides.png" alt="No Me Olvides" width="120"/>
 
 # 🌸 No Me Olvides
 
