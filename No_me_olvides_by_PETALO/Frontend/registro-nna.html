@@ -188,7 +188,8 @@
             <div class="form-group"><label>Nombre(s) del Tutor/a</label><input id="nombre_tutor" type="text" maxlength="100"/></div>
             <div class="form-group"><label>Primer Apellido del Tutor/a</label><input id="primer_apellido_tutor" type="text" maxlength="60"/></div>
             <div class="form-group"><label>Segundo Apellido del Tutor/a</label><input id="segundo_apellido_tutor" type="text" maxlength="60"/></div>
-            <div class="form-group"><label>Edad del Tutor/a</label><input id="edad_tutor" type="number" min="0" max="120"/></div>
+            <div class="form-group"><label>Fecha de Nacimiento del Tutor/a</label><input id="fecha_nac_tutor" type="date" onchange="calcularEdadTutor()"/></div>
+            <div class="form-group"><label>Edad del Tutor/a</label><input id="edad_tutor" type="number" readonly style="background:var(--bg-deep); opacity:0.8;"/></div>
             <div class="form-group"><label>Parentesco del Tutor/a</label><select id="id_parentesco"><option value="">Cargando catálogo...</option></select></div>
             <div class="form-group"><label>Teléfono del Tutor/a</label><input id="telefono_tutor" type="text" maxlength="10" placeholder="10 dígitos"/></div>
             <div class="form-group"><label>Correo del Tutor/a</label><input id="correo_tutor" type="email" maxlength="100" placeholder="ejemplo@correo.com"/></div>
@@ -364,6 +365,17 @@
     const tiene = document.getElementById('tiene_discapacidad').value === 'true';
     document.getElementById('caja_discapacidad').style.display = tiene ? 'grid' : 'none';
   }
+  function calcularEdadTutor() {
+    const fecha = document.getElementById('fecha_nac_tutor').value;
+    const campo = document.getElementById('edad_tutor');
+    if (!fecha) { campo.value = ''; return; }
+    const nac = new Date(fecha);
+    const hoy = new Date();
+    let e = hoy.getFullYear() - nac.getFullYear();
+    const m = hoy.getMonth() - nac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) e--;
+    campo.value = e;
+  }
   function toggleDiscapacidadTutor() {
     const tiene = document.getElementById('t_tiene_discapacidad').value === 'true';
     document.getElementById('caja_discapacidad_tutor').style.display = tiene ? 'grid' : 'none';
@@ -491,6 +503,7 @@
       primer_apellido_tutor: limpiarTexto(g('primer_apellido_tutor')),
       segundo_apellido_tutor: limpiarTexto(g('segundo_apellido_tutor')),
       edad_tutor: parseInt(g('edad_tutor')) || null,
+      fecha_nacimiento_tutor: g('fecha_nac_tutor'),
       telefono_tutor: limpiarTexto(g('telefono_tutor')),
       correo_tutor: limpiarTexto(g('correo_tutor')),
       id_parentesco: parseInt(g('id_parentesco')) || null,

@@ -31,8 +31,8 @@ Ser el aliado de confianza en gestión de datos para organizaciones que generan 
 | Integrante | Rol |
 |---|---|
 | García Hernández Edgar Alessandro | Backend y base de datos |
-| Soria López Dana Paola  | Frontend y base de datos |
-| Velázquez Rivero Lesly | Catálogos y base de datos|
+| Soria López Dana Paola | Frontend y base de datos|
+| Velázquez Rivero Lesly | Catálogos y base de datos |
 
 ---
 
@@ -86,9 +86,9 @@ Centralizar y resguardar la información de los niños, niñas y adolescentes at
 ```
 No_me_olvides_PETALO/
 ├── Database/                  Base de datos
-│   ├── schema.sql             Modelo físico normalizado a 3FN (35 tablas)
-│   ├── *.csv                  Catálogos (lenguas INALI, SEPOMEX, etc.)
-│   └── docs/                  Diccionario de datos, normalización y diagrama
+│   ├── schema.sql             Modelo físico normalizado a 3FN (41 tablas)
+│   └── *.csv                  Catálogos (lenguas INALI, CIE-11, SEPOMEX, etc.)
+├── Database_docs/             Diccionario, normalización, fuentes y diagrama
 ├── Frontend/                  Pantallas HTML/CSS/JS
 ├── routes/                    Endpoints de la API (FastAPI)
 ├── main.py                    Punto de entrada del backend
@@ -101,12 +101,27 @@ No_me_olvides_PETALO/
 
 ## Base de datos
 
-El modelo está normalizado hasta la **Tercera Forma Normal (3FN)** y consta de **35 tablas** (catálogos, expediente y tablas de asociación), derivadas del Formato Único de Declaración (FUD) de la CEAVEM y de los catálogos del proyecto (lenguas INALI, discapacidad, SEPOMEX).
+El modelo está normalizado hasta la **Tercera Forma Normal (3FN)** y consta de **41 tablas**, **233 columnas** y **51 llaves foráneas**, derivadas del Formato Único de Declaración (FUD) de la CEAVEM y de los catálogos del proyecto (SEPOMEX, lenguas INALI, enfermedades CIE-11 de la OMS y dominios cerrados).
 
-La documentación completa está en `Database/docs/`:
-- **Diccionario de datos** — cada tabla con sus atributos, tipos, claves y descripción.
-- **Proceso de normalización** — descomposición 1FN → 2FN → 3FN tabla por tabla.
-- **Diagrama relacional** — modelo final con todas las relaciones.
+**Categorías de tablas:**
+
+| Categoría | Cantidad | Ejemplos |
+|---|---|---|
+| Catálogos (dominios y fuentes oficiales) | 19 | `cat_sexo`, `cat_entidad`, `cat_municipio`, `cat_asentamiento`, `cat_lengua`, `cat_enfermedad` |
+| Acceso y seguridad | 2 | `personal`, `invitaciones` |
+| Entidad central | 1 | `nna` |
+| Expediente del NNA | 11 | `solicitante`, `domicilio`, `hechos_victimizantes`, `tutor`, `contacto_emergencia` |
+| Relaciones N:M | 8 | `nna_discapacidad`, `nna_lengua`, `nna_enfermedad`, `tutor_discapacidad`, `tutor_lengua` |
+
+Toda la información del FUD y de los catálogos se almacena sin redundancia: la geografía sigue la jerarquía `cat_entidad → cat_municipio → cat_asentamiento`, las discapacidades del NNA y del tutor usan tablas de asociación con llaves foráneas a `cat_tipo_discapacidad` y `cat_grado_dependencia`, y las enfermedades se enlazan al catálogo CIE-11.
+
+La documentación completa está en [`Database_docs/`](Database_docs/):
+- **[Diccionario de datos](Database_docs/diccionario_datos.pdf)** — cada tabla con sus atributos, tipos, claves y descripción.
+- **[Proceso de normalización](Database_docs/normalizacion.pdf)** — descomposición 1FN → 2FN → 3FN tabla por tabla.
+- **[Datos asignados y fuentes](Database_docs/fuentes_datos.pdf)** — caja de herramientas (SEPOMEX, INALI, CIE-11) y mapeo de las 8 hojas del FUD.
+- **[Diagrama relacional](Database_docs/diagrama_relacional.pdf)** — modelo final completo con todas las relaciones.
+
+![Diagrama relacional](Database_docs/diagrama_relacional.png)
 
 ---
 
@@ -142,7 +157,7 @@ cd No_me_olvides_PETALO
 psql -U petalo -d no_me_olvides -f Database/schema.sql
 ```
 
-Esto crea las 35 tablas y carga los catálogos de lenguas (INALI) y discapacidad.
+Esto crea las 41 tablas y carga los catálogos de lenguas (INALI), enfermedades (CIE-11) y discapacidad.
 
 ### 4. Crear el archivo de variables de entorno
 

@@ -84,6 +84,7 @@
               <button class="btn btn-secondary btn-sm" onclick="location.href='ver-usuario.html?id=${u.id}'">Ver</button>
               <button class="btn btn-ghost btn-sm" onclick="location.href='editar-usuario.html?id=${u.id}'">Editar</button>
               <button class="btn ${u.estado === 'restringido' ? 'btn-primary' : 'btn-danger'} btn-sm" onclick="${u.estado === 'restringido' ? `activar(${u.id})` : `restringir(${u.id})`}">${u.estado === 'restringido' ? 'Activar' : 'Restringir'}</button>
+              ${getRol() === 'director' ? `<button class="btn btn-ghost btn-sm" onclick="recuperarPassword(${u.id})">Recuperar contraseña</button>` : ''}
             </div>
           </td>
         </tr>`).join('');
@@ -100,6 +101,27 @@
     await fetch(`${API}/api/usuarios/${id}/activar`, { method:'PUT', headers:authHeaders() });
     cargar();
   }
+
+  async function recuperarPassword(id) {
+    const pass = prompt('Ingresa tu contraseña de director para ver la contraseña de este usuario:');
+    if (pass === null || pass === '') return;
+    try {
+      const res = await fetch(`${API}/api/usuarios/${id}/recuperar-password`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ password: pass })
+      });
+      const d = await res.json();
+      if (res.ok) {
+        alert(`Contraseña de ${d.nombre}:\n\n${d.contrasena}`);
+      } else {
+        alert(d.detail || 'No se pudo recuperar la contraseña');
+      }
+    } catch (e) {
+      alert('No se pudo conectar con el servidor');
+    }
+  }
+
   cargar();
 </script>
 </body>

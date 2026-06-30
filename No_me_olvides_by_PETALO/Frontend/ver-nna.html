@@ -74,6 +74,14 @@
         if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) e--;
         edad = e;
       }
+      let edadTutor = '—';
+      if (n.fecha_nacimiento_tutor) {
+        const nac = new Date(n.fecha_nacimiento_tutor), hoy = new Date();
+        let e = hoy.getFullYear() - nac.getFullYear();
+        const m = hoy.getMonth() - nac.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) e--;
+        edadTutor = e;
+      }
       const fecha = (f) => f ? new Date(f).toLocaleDateString('es-MX') : '—';
       const C = (label, value, full) => `<div class="det-campo ${full?'det-full':''}"><span class="det-label">${label}</span><span class="det-value">${value}</span></div>`;
       const danos = [n.dano_fisico?'Físico':null, n.dano_psicologico?'Psicológico':null, n.dano_patrimonial?'Patrimonial':null, n.dano_sexual?'Sexual':null].filter(Boolean);
@@ -181,7 +189,8 @@
               ${C('Nombre(s) del Tutor/a', v(n.nombre_tutor))}
               ${C('Primer Apellido del Tutor/a', v(n.primer_apellido_tutor))}
               ${C('Segundo Apellido del Tutor/a', v(n.segundo_apellido_tutor))}
-              ${C('Edad del Tutor/a', v(n.edad_tutor))}
+              ${C('Fecha de Nacimiento del Tutor/a', fecha(n.fecha_nacimiento_tutor))}
+              ${C('Edad del Tutor/a', edadTutor)}
               ${C('Parentesco del Tutor/a', getPar(n.id_parentesco))}
               ${C('Teléfono del Tutor/a', v(n.telefono_tutor))}
               ${C('Correo del Tutor/a', v(n.correo_tutor))}

@@ -553,16 +553,10 @@ ALTER TABLE hechos_victimizantes ADD COLUMN IF NOT EXISTS lugar_municipio VARCHA
 ALTER TABLE hechos_victimizantes ADD COLUMN IF NOT EXISTS lugar_entidad VARCHAR(120);
 
 ALTER TABLE tutor ADD COLUMN IF NOT EXISTS tiene_discapacidad BOOLEAN DEFAULT FALSE;
-ALTER TABLE tutor ADD COLUMN IF NOT EXISTS tipo_discapacidad VARCHAR(60);
-ALTER TABLE tutor ADD COLUMN IF NOT EXISTS grado_dependencia VARCHAR(40);
-ALTER TABLE tutor ADD COLUMN IF NOT EXISTS origen_discapacidad VARCHAR(60);
-ALTER TABLE tutor ADD COLUMN IF NOT EXISTS temporalidad VARCHAR(40);
-ALTER TABLE tutor ADD COLUMN IF NOT EXISTS ayudas_tecnicas VARCHAR(80);
-ALTER TABLE tutor ADD COLUMN IF NOT EXISTS diagnostico_especifico VARCHAR(255);
 ALTER TABLE tutor ADD COLUMN IF NOT EXISTS habla_espanol BOOLEAN DEFAULT TRUE;
 ALTER TABLE tutor ADD COLUMN IF NOT EXISTS requiere_traductor BOOLEAN DEFAULT FALSE;
 ALTER TABLE tutor ADD COLUMN IF NOT EXISTS pertenece_indigena BOOLEAN DEFAULT FALSE;
-ALTER TABLE tutor ADD COLUMN IF NOT EXISTS edad INTEGER;
+ALTER TABLE tutor ADD COLUMN IF NOT EXISTS fecha_nacimiento DATE;
 ALTER TABLE tutor ADD COLUMN IF NOT EXISTS habla_lengua_indigena BOOLEAN DEFAULT FALSE;
 ALTER TABLE tutor ADD COLUMN IF NOT EXISTS comunidad_indigena VARCHAR(100);
 
@@ -570,6 +564,17 @@ CREATE TABLE IF NOT EXISTS tutor_lengua (
     id_tutor  INTEGER NOT NULL REFERENCES tutor(id_tutor) ON DELETE CASCADE,
     id_lengua INTEGER NOT NULL REFERENCES cat_lengua(id_lengua),
     PRIMARY KEY (id_tutor, id_lengua)
+);
+
+CREATE TABLE IF NOT EXISTS tutor_discapacidad (
+    id_tutor             INTEGER NOT NULL REFERENCES tutor(id_tutor) ON DELETE CASCADE,
+    id_tipo_discapacidad INTEGER NOT NULL REFERENCES cat_tipo_discapacidad(id_tipo_discapacidad),
+    id_grado_dependencia INTEGER REFERENCES cat_grado_dependencia(id_grado_dependencia),
+    origen_discapacidad  VARCHAR(60),
+    temporalidad         VARCHAR(40),
+    ayudas_tecnicas      VARCHAR(80),
+    diagnostico_especifico VARCHAR(255),
+    PRIMARY KEY (id_tutor, id_tipo_discapacidad)
 );
 
 CREATE TABLE IF NOT EXISTS contacto_emergencia (

@@ -65,6 +65,9 @@ class NNA(BaseModel):
     estado_investigacion: Optional[str] = None
 
     nombre_tutor: Optional[str] = None
+    primer_apellido_tutor: Optional[str] = None
+    segundo_apellido_tutor: Optional[str] = None
+    fecha_nacimiento_tutor: Optional[str] = None
     telefono_tutor: Optional[str] = None
     telefono: Optional[str] = None
     correo_tutor: Optional[str] = None
@@ -96,6 +99,9 @@ class NNA(BaseModel):
     tutor_habla_espanol: Optional[bool] = True
     tutor_requiere_traductor: Optional[bool] = False
     tutor_pertenece_indigena: Optional[bool] = False
+    tutor_habla_lengua_indigena: Optional[bool] = False
+    tutor_comunidad_indigena: Optional[str] = None
+    ids_variantes_lengua_tutor: List[int] = []
 
     contacto_emergencia_1: Optional[str] = None
     telefono_emergencia_1: Optional[str] = None
@@ -288,22 +294,30 @@ def _guardar_relacionados(cursor, id_nna, nna):
                        (id_nna, e.id_enfermedad, e.esta_controlada))
 
     if nna.nombre_tutor:
-        partes = nna.nombre_tutor.strip().split()
         cursor.execute("""
-            INSERT INTO tutor (id_nna, nombre, primer_apellido, segundo_apellido,
-                   tiene_discapacidad, tipo_discapacidad, grado_dependencia, origen_discapacidad,
-                   temporalidad, ayudas_tecnicas, diagnostico_especifico,
-                   habla_espanol, requiere_traductor, pertenece_indigena)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id_tutor
-        """, (id_nna, partes[0] if partes else "N/A",
-              partes[1] if len(partes) > 1 else "",
-              " ".join(partes[2:]) if len(partes) > 2 else "",
-              bool(nna.tutor_tiene_discapacidad), nna.tutor_tipo_discapacidad,
-              nna.tutor_grado_dependencia, nna.tutor_origen_discapacidad,
-              nna.tutor_temporalidad, nna.tutor_ayudas_tecnicas, nna.tutor_diagnostico_especifico,
+            INSERT INTO tutor (id_nna, nombre, primer_apellido, segundo_apellido, fecha_nacimiento,
+                   tiene_discapacidad, habla_espanol, requiere_traductor, pertenece_indigena,
+                   habla_lengua_indigena, comunidad_indigena)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id_tutor
+        """, (id_nna, nna.nombre_tutor, nna.primer_apellido_tutor, nna.segundo_apellido_tutor, nna.fecha_nacimiento_tutor or None,
+              bool(nna.tutor_tiene_discapacidad),
               bool(nna.tutor_habla_espanol), bool(nna.tutor_requiere_traductor),
-              bool(nna.tutor_pertenece_indigena)))
+              bool(nna.tutor_pertenece_indigena),
+              bool(nna.tutor_habla_lengua_indigena), nna.tutor_comunidad_indigena))
         id_tutor = cursor.fetchone()[0]
+        if nna.tutor_tiene_discapacidad and nna.tutor_tipo_discapacidad:
+            idtd = id_tdisc(cursor, nna.tutor_tipo_discapacidad)
+            if idtd:
+                cursor.execute("""
+                    INSERT INTO tutor_discapacidad (id_tutor, id_tipo_discapacidad, id_grado_dependencia,
+                           origen_discapacidad, temporalidad, ayudas_tecnicas, diagnostico_especifico)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s)
+                """, (id_tutor, idtd, id_grado(cursor, nna.tutor_grado_dependencia),
+                      nna.tutor_origen_discapacidad, nna.tutor_temporalidad,
+                      nna.tutor_ayudas_tecnicas, nna.tutor_diagnostico_especifico))
+        for idl in nna.ids_variantes_lengua_tutor:
+            cursor.execute("INSERT INTO tutor_lengua (id_tutor, id_lengua) VALUES (%s,%s) ON CONFLICT DO NOTHING",
+                           (id_tutor, idl))
         if nna.telefono_tutor:
             idtc = _id(cursor, "SELECT id_tipo_contacto FROM cat_tipo_contacto WHERE nombre=%s", "Celular")
             cursor.execute("INSERT INTO contacto (id_tutor, id_tipo_contacto, valor) VALUES (%s,%s,%s)",
@@ -342,6 +356,8 @@ def _guardar_relacionados(cursor, id_nna, nna):
 def _borrar_relacionados(cursor, id_nna):
     cursor.execute("DELETE FROM contacto WHERE id_tutor IN (SELECT id_tutor FROM tutor WHERE id_nna=%s)", (id_nna,))
     cursor.execute("DELETE FROM tutor_enfermedad WHERE id_tutor IN (SELECT id_tutor FROM tutor WHERE id_nna=%s)", (id_nna,))
+    cursor.execute("DELETE FROM tutor_lengua WHERE id_tutor IN (SELECT id_tutor FROM tutor WHERE id_nna=%s)", (id_nna,))
+    cursor.execute("DELETE FROM tutor_discapacidad WHERE id_tutor IN (SELECT id_tutor FROM tutor WHERE id_nna=%s)", (id_nna,))
     cursor.execute("DELETE FROM contacto WHERE id_nna=%s", (id_nna,))
     cursor.execute("DELETE FROM contacto_emergencia WHERE id_nna=%s", (id_nna,))
     for t in ["tutor", "nna_dano", "nna_violencia", "nna_discapacidad", "nna_lengua",
@@ -462,14 +478,22 @@ def ver_nna(id: int):
     else:
         data["tiene_discapacidad"] = False
 
-    cursor.execute("SELECT nombre, primer_apellido, segundo_apellido, parentesco FROM tutor WHERE id_nna=%s LIMIT 1", (id,))
+    cursor.execute("SELECT nombre, primer_apellido, segundo_apellido, parentesco, fecha_nacimiento, habla_lengua_indigena, comunidad_indigena FROM tutor WHERE id_nna=%s LIMIT 1", (id,))
     t = cursor.fetchone()
     id_tutor_actual = None
     if t:
-        data["nombre_tutor"] = " ".join([x for x in t[:3] if x])
+        data["nombre_tutor"] = t[0]
+        data["primer_apellido_tutor"] = t[1]
+        data["segundo_apellido_tutor"] = t[2]
+        data["fecha_nacimiento_tutor"] = str(t[4]) if t[4] else None
+        data["tutor_habla_lengua_indigena"] = t[5]
+        data["tutor_comunidad_indigena"] = t[6]
         cursor.execute("SELECT id_tutor FROM tutor WHERE id_nna=%s LIMIT 1", (id,))
         rtut = cursor.fetchone()
         id_tutor_actual = rtut[0] if rtut else None
+        if id_tutor_actual:
+            cursor.execute("SELECT id_lengua FROM tutor_lengua WHERE id_tutor=%s", (id_tutor_actual,))
+            data["ids_variantes_lengua_tutor"] = [r[0] for r in cursor.fetchall()]
         parentescos = ["Madre", "Padre", "Abuelo/a", "Tío/a", "Hermano/a", "Tutor legal", "Otro"]
         data["id_parentesco"] = (parentescos.index(t[3]) + 1) if t[3] in parentescos else None
 
@@ -607,22 +631,29 @@ def ver_nna(id: int):
         data["lugar_hechos_municipio"] = lh[2]
         data["lugar_hechos_entidad"] = lh[3]
 
-    cursor.execute("""SELECT tiene_discapacidad, tipo_discapacidad, grado_dependencia, origen_discapacidad,
-                             temporalidad, ayudas_tecnicas, diagnostico_especifico,
-                             habla_espanol, requiere_traductor, pertenece_indigena
+    cursor.execute("""SELECT tiene_discapacidad, habla_espanol, requiere_traductor, pertenece_indigena
                       FROM tutor WHERE id_nna=%s LIMIT 1""", (id,))
     tt = cursor.fetchone()
     if tt:
         data["tutor_tiene_discapacidad"] = tt[0]
-        data["tutor_tipo_discapacidad"] = tt[1]
-        data["tutor_grado_dependencia"] = tt[2]
-        data["tutor_origen_discapacidad"] = tt[3]
-        data["tutor_temporalidad"] = tt[4]
-        data["tutor_ayudas_tecnicas"] = tt[5]
-        data["tutor_diagnostico_especifico"] = tt[6]
-        data["tutor_habla_espanol"] = tt[7]
-        data["tutor_requiere_traductor"] = tt[8]
-        data["tutor_pertenece_indigena"] = tt[9]
+        data["tutor_habla_espanol"] = tt[1]
+        data["tutor_requiere_traductor"] = tt[2]
+        data["tutor_pertenece_indigena"] = tt[3]
+        cursor.execute("""SELECT td.origen_discapacidad, td.temporalidad, td.ayudas_tecnicas,
+                                 td.diagnostico_especifico, cd.nombre, cg.nombre
+                          FROM tutor_discapacidad td
+                          JOIN tutor t ON td.id_tutor = t.id_tutor
+                          LEFT JOIN cat_tipo_discapacidad cd ON td.id_tipo_discapacidad = cd.id_tipo_discapacidad
+                          LEFT JOIN cat_grado_dependencia cg ON td.id_grado_dependencia = cg.id_grado_dependencia
+                          WHERE t.id_nna=%s LIMIT 1""", (id,))
+        tdd = cursor.fetchone()
+        if tdd:
+            data["tutor_origen_discapacidad"] = tdd[0]
+            data["tutor_temporalidad"] = tdd[1]
+            data["tutor_ayudas_tecnicas"] = tdd[2]
+            data["tutor_diagnostico_especifico"] = tdd[3]
+            data["tutor_tipo_discapacidad"] = tdd[4]
+            data["tutor_grado_dependencia"] = tdd[5]
 
     cursor.execute("""SELECT nombre, telefono FROM contacto_emergencia WHERE id_nna=%s ORDER BY id_contacto_emergencia""", (id,))
     emergencias = cursor.fetchall()

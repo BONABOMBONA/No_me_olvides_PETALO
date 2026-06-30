@@ -178,3 +178,26 @@ def activar_usuario(id: int, usuario=Depends(solo_director)):
     cur.close()
     conn.close()
     return {"mensaje": "Usuario activado correctamente"}
+
+class RecuperarPassword(BaseModel):
+    password: Optional[str] = None
+
+@router.post("/api/usuarios/{id}/recuperar-password")
+def recuperar_password(id: int, data: RecuperarPassword, usuario=Depends(verificar_token)):
+    if usuario.get("rol") != "director":
+        raise HTTPException(status_code=403, detail="Solo el director puede recuperar contraseñas")
+    if not data.password:
+        raise HTTPException(status_code=400, detail="Debes ingresar tu contraseña de director")
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM personal WHERE id_personal=%s AND contrasena=%s", (usuario.get("id"), data.password))
+    if not cur.fetchone():
+        cur.close(); conn.close()
+        raise HTTPException(status_code=401, detail="Tu contraseña de director es incorrecta")
+    cur.execute("SELECT nombre, primer_apellido, contrasena FROM personal WHERE id_personal=%s", (id,))
+    fila = cur.fetchone()
+    cur.close()
+    conn.close()
+    if not fila:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return {"nombre": f"{fila[0]} {fila[1] or ''}".strip(), "contrasena": fila[2]}

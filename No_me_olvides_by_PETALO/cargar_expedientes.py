@@ -121,8 +121,8 @@ def cargar():
                             (id_nna, al(tipos_disc), al(grados)))
 
             tnom = al(nombres_m + nombres_h); tap1 = al(apellidos); tap2 = al(apellidos)
-            id_tutor = uid(cur, "INSERT INTO tutor (id_nna, nombre, primer_apellido, segundo_apellido, parentesco, edad) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id_tutor",
-                           id_nna, tnom, tap1, tap2, al(parentescos), random.randint(28, 65))
+            id_tutor = uid(cur, "INSERT INTO tutor (id_nna, nombre, primer_apellido, segundo_apellido, parentesco, fecha_nacimiento) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id_tutor",
+                           id_nna, tnom, tap1, tap2, al(parentescos), date(random.randint(1965, 1996), random.randint(1,12), random.randint(1,28)))
             for ie in random.sample(enfermedades, random.randint(1, 2)):
                 cur.execute("INSERT INTO nna_enfermedad (id_nna, id_enfermedad, esta_controlada) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
                             (id_nna, ie, random.random() < 0.6))
